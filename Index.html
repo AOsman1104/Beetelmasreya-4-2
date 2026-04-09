@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>صندوق العمارة 4-2</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f4f3ee;--bg2:#ffffff;--bg3:#f0efe9;--bg4:#e8e7e0;
+  --bd:#dddcd5;--bd2:#c8c7be;
+  --tx:#1c1c18;--tx2:#5a5954;--tx3:#9a9990;
+  --ac:#1d4ed8;--ac2:#2563eb;--ac-bg:#eff6ff;
+  --gr:#15803d;--gr-bg:#f0fdf4;--gr-bd:#bbf7d0;
+  --rd:#b91c1c;--rd-bg:#fef2f2;--rd-bd:#fecaca;
+  --am:#b45309;--am-bg:#fffbeb;--am-bd:#fde68a;
+  --tl:#0e7490;--tl-bg:#ecfeff;--tl-bd:#a5f3fc;
+  --r:10px;--rl:14px;--sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;font-size:14px}
+/* HEADER */
+.hdr{background:var(--bg2);border-bottom:1px solid var(--bd);padding:0 24px;display:flex;align-items:stretch;position:sticky;top:0;z-index:100;box-shadow:var(--sh)}
+.hdr-brand{display:flex;align-items:center;gap:10px;padding:12px 0;border-left:1px solid var(--bd);padding-left:20px;margin-left:4px}
+.hdr-dot{width:8px;height:8px;border-radius:50%;background:var(--gr);animation:pu 2s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
+.hdr-title{font-size:15px;font-weight:600;color:var(--tx)}
+.hdr-sub{font-size:11px;color:var(--tx3)}
+.nav-tabs{display:flex;flex:1;overflow-x:auto}
+.nb{padding:0 18px;height:100%;font-size:13px;font-weight:500;color:var(--tx2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:6px}
+.nb.on{color:var(--ac);border-bottom-color:var(--ac)}
+.nb:hover:not(.on){color:var(--tx);background:var(--bg3)}
+.nb.admin-tab.on{color:var(--am);border-bottom-color:var(--am)}
+.nb.admin-tab{color:var(--tx2)}
+.adm-badge{font-size:10px;background:var(--am-bg);color:var(--am);padding:1px 6px;border-radius:4px;border:1px solid var(--am-bd)}
+.hdr-right{display:flex;align-items:center;gap:8px;padding:0 0 0 20px;border-right:1px solid var(--bd);margin-right:4px}
+.lock-btn{padding:6px 14px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid var(--bd2);transition:.15s;background:var(--bg2);color:var(--tx2)}
+.lock-btn:hover{border-color:var(--ac);color:var(--ac)}
+.lock-btn.open{background:var(--rd-bg);color:var(--rd);border-color:var(--rd-bd)}
+.clk{font-size:11px;color:var(--tx3);min-width:120px;text-align:center}
+/* MAIN */
+.main{max-width:1100px;margin:0 auto;padding:24px}
+.pg{display:none}.pg.on{display:block}
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:20px;margin-bottom:16px;box-shadow:var(--sh)}
+.ct{font-size:11px;font-weight:600;color:var(--tx3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.ct::before{content:'';width:3px;height:11px;background:var(--ac);border-radius:2px;display:block}
+.ct.am::before{background:var(--am)}
+/* APARTMENT GRID */
+.floor-section{margin-bottom:24px}
+.floor-label{font-size:12px;font-weight:600;color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.floor-label::after{content:'';flex:1;height:1px;background:var(--bd)}
+.apt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.apt-card{background:var(--bg2);border:1.5px solid var(--bd);border-radius:var(--rl);padding:14px 16px;cursor:pointer;transition:all .15s;position:relative;box-shadow:var(--sh)}
+.apt-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.apt-num{font-size:20px;font-weight:700;margin-bottom:4px}
+.apt-name{font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}
+.apt-status{display:flex;gap:5px;flex-wrap:wrap}
+.pip{width:8px;height:8px;border-radius:50%;display:inline-block}
+.pip-gr{background:var(--gr)}.pip-rd{background:var(--rd)}.pip-am{background:var(--am)}.pip-gy{background:var(--bd2)}
+.apt-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+/* STMT PAGE */
+.stmt-back{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--bd)}
+/* KPIs */
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
+.kl{font-size:11px;color:var(--tx3);margin-bottom:4px;font-weight:500}
+.kv{font-size:21px;font-weight:700}.ks{font-size:11px;color:var(--tx3);margin-top:2px}
+/* FUNDS */
+.funds{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.fc2{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.fn{font-size:12px;color:var(--tx2);margin-bottom:4px;font-weight:500}
+.fa{font-size:26px;font-weight:700}
+.fd{font-size:11px;color:var(--tx3);margin-top:3px}
+.prog{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:8px}
+.pf{height:100%;border-radius:3px;transition:width .4s}
+/* COLORS */
+.c-gr{color:var(--gr)}.c-rd{color:var(--rd)}.c-am{color:var(--am)}.c-ac{color:var(--ac)}.c-tl{color:var(--tl)}.c-tx2{color:var(--tx2)}
+/* BADGES */
+.bdg{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bdg-gr{background:var(--gr-bg);color:var(--gr);border:1px solid var(--gr-bd)}
+.bdg-rd{background:var(--rd-bg);color:var(--rd);border:1px solid var(--rd-bd)}
+.bdg-am{background:var(--am-bg);color:var(--am);border:1px solid var(--am-bd)}
+.bdg-ac{background:var(--ac-bg);color:var(--ac);border:1px solid #bfdbfe}
+.bdg-tl{background:var(--tl-bg);color:var(--tl);border:1px solid var(--tl-bd)}
+.bdg-gy{background:var(--bg4);color:var(--tx2);border:1px solid var(--bd)}
+/* TABLES */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;color:var(--tx3);padding:8px 10px;border-bottom:1.5px solid var(--bd);text-align:right;font-weight:600;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--bd);color:var(--tx);text-align:right;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg3)}
+.r-in{border-right:3px solid var(--gr)}.r-ex{border-right:3px solid var(--rd)}.r-tr{border-right:3px solid var(--am)}
+/* FORMS */
+.fl{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.fg{flex:1;min-width:130px}
+.fg label{display:block;font-size:11px;color:var(--tx3);margin-bottom:4px;font-weight:600}
+.fc{width:100%;background:var(--bg2);border:1px solid var(--bd2);border-radius:var(--r);padding:8px 11px;color:var(--tx);font-family:inherit;font-size:13px;outline:none;transition:border .15s}
+.fc:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+select.fc option{background:var(--bg2)}
+/* BUTTONS */
+.btn{padding:8px 16px;border:none;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:.15s}
+.btn-pr{background:var(--ac2);color:#fff}.btn-pr:hover{background:var(--ac)}
+.btn-gr{background:var(--gr);color:#fff}.btn-gr:hover{opacity:.88}
+.btn-am{background:var(--am-bg);color:var(--am);border:1px solid var(--am-bd)}.btn-am:hover{background:var(--am-bd)}
+.btn-rd{background:var(--rd-bg);color:var(--rd);border:1px solid var(--rd-bd)}.btn-rd:hover{background:var(--rd-bd)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-gy{background:var(--bg3);color:var(--tx2);border:1px solid var(--bd)}.btn-gy:hover{border-color:var(--bd2)}
+/* Q cells */
+.q-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.q-cell{border:1.5px solid var(--bd);border-radius:var(--r);padding:12px;position:relative}
+.q-cell.paid{border-color:var(--gr-bd);background:var(--gr-bg)}
+.q-cell.partial{border-color:var(--am-bd);background:var(--am-bg)}
+.q-cell.unpaid{border-color:var(--rd-bd);background:var(--rd-bg)}
+.q-label{font-size:11px;color:var(--tx2);margin-bottom:4px;font-weight:600}
+.q-amount{font-size:18px;font-weight:700}
+.q-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+.q-icon{position:absolute;top:10px;left:10px;font-size:13px;font-weight:700}
+/* STATS GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+/* MISC */
+.sep{height:1px;background:var(--bd);margin:12px 0}
+.empty{text-align:center;padding:28px;color:var(--tx3)}
+.notice{background:var(--ac-bg);border:1px solid #bfdbfe;border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--ac);margin-bottom:12px}
+.notice.warn{background:var(--am-bg);border-color:var(--am-bd);color:var(--am)}
+.notice.ok{background:var(--gr-bg);border-color:var(--gr-bd);color:var(--gr)}
+.search-r{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+/* LOGIN */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:800;backdrop-filter:blur(3px)}
+.login-box{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rl);padding:32px;width:320px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,.15)}
+@media(max-width:700px){.kg{grid-template-columns:1fr 1fr}.funds{grid-template-columns:1fr}.q-grid{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}.apt-grid{grid-template-columns:repeat(2,1fr)}.modal-panel{width:100vw}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr" style="height:54px">
+  <div class="hdr-right">
+    <div class="hdr-dot"></div>
+    <div><div class="hdr-title">عمارة 4-2</div><div class="hdr-sub">نظام الحسابات</div></div>
+  </div>
+  <div class="nav-tabs" id="navBar">
+    <button class="nb on" onclick="go('apts')">الشقق</button>
+    <button class="nb" onclick="go('overview')">التحليلات</button>
+    <button class="nb admin-tab" id="tab-income" style="display:none" onclick="go('income')">إيراد <span class="adm-badge">إدارة</span></button>
+    <button class="nb admin-tab" id="tab-expense" style="display:none" onclick="go('expense')">مصروف <span class="adm-badge">إدارة</span></button>
+    <button class="nb admin-tab" id="tab-ledger" style="display:none" onclick="go('ledger')">الدفتر <span class="adm-badge">إدارة</span></button>
+    <button class="nb admin-tab" id="tab-charges" style="display:none" onclick="go('charges')">بنود جماعية <span class="adm-badge">إدارة</span></button>
+    <button class="nb admin-tab" id="tab-upload" style="display:none" onclick="go('upload')">رفع بيانات <span class="adm-badge">إدارة</span></button>
+    <button class="nb admin-tab" id="tab-aptdata" style="display:none" onclick="go('aptdata')">بيانات الشقق <span class="adm-badge">إدارة</span></button>
+  </div>
+  <div class="hdr-brand">
+    <span class="clk" id="clk"></span>
+    <button class="lock-btn" id="lockBtn" onclick="toggleLock()">🔒 إدارة</button>
+    <button class="btn btn-sm btn-rd" id="resetBtn" style="display:none" onclick="resetToSeed()">↺ إعادة تهيئة</button>
+  </div>
+</div>
+
+<!-- LOGIN OVERLAY -->
+<div class="overlay" id="loginOverlay" style="display:none">
+  <div class="login-box">
+    <div style="font-size:32px;margin-bottom:12px">🔐</div>
+    <div style="font-size:17px;font-weight:600;margin-bottom:6px">لوحة الإدارة</div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:20px">أدخل الباسورد للوصول</div>
+    <input class="fc" type="password" id="pwdInput" placeholder="الباسورد..." onkeydown="if(event.key==='Enter')tryLogin()" style="margin-bottom:10px;text-align:center">
+    <button class="btn btn-pr" style="width:100%;margin-bottom:10px" onclick="tryLogin()">دخول</button>
+    <div id="pwd-err" style="font-size:12px;color:var(--rd);min-height:18px"></div>
+    <div class="sep"></div>
+    <button class="btn btn-gy" style="width:100%;font-size:12px" onclick="guestMode()">عرض الشقق فقط</button>
+  </div>
+</div>
+
+<!-- APT STATEMENT FULL PAGE -->
+<div class="pg" id="pg-stmt">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <button class="btn btn-gy" onclick="go('apts')" style="font-size:13px">← العودة للشقق</button>
+    <div id="stmtTitle" style="font-size:18px;font-weight:600"></div>
+  </div>
+  <div id="stmtBody"></div>
+</div>
+
+<div class="main">
+
+<!-- ══════ APTS GRID ══════ -->
+<div class="pg on" id="pg-apts">
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+    <input class="fc" type="text" id="apt-search" placeholder="بحث بالاسم أو رقم الشقة..." oninput="renderAptGrid()" style="max-width:260px">
+    <select class="fc" id="apt-filter" onchange="renderAptGrid()" style="max-width:160px">
+      <option value="">كل الشقق</option>
+      <option value="st-none">لم يدفع</option>
+      <option value="st-partial">دفع جزئي</option>
+      <option value="st-ok">ملتزم</option>
+    </select>
+    <div style="display:flex;gap:12px;font-size:12px;color:var(--tx3);margin-right:auto;flex-wrap:wrap">
+      <span><span class="pip pip-gr" style="display:inline-block;margin-left:4px"></span>ملتزم</span>
+      <span><span class="pip pip-am" style="display:inline-block;margin-left:4px"></span>جزئي</span>
+      <span><span class="pip pip-rd" style="display:inline-block;margin-left:4px"></span>لم يدفع</span>
+    </div>
+  </div>
+  <div id="apt-grid-out"></div>
+</div>
+
+<!-- ══════ OVERVIEW ══════ -->
+<div class="pg" id="pg-overview">
+  <div class="kg" id="ov-kpis"></div>
+  <div class="funds" id="ov-funds"></div>
+  <div class="grid-2" id="ov-stats"></div>
+  <div class="card"><div class="ct">آخر المصروفات والتحويلات</div><div class="tw"><table>
+    <thead><tr><th>التاريخ</th><th>البيان</th><th>الصندوق</th><th>التصنيف</th><th>المبلغ</th></tr></thead>
+    <tbody id="ov-recent"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ══════ INCOME ══════ -->
+<div class="pg" id="pg-income">
+  <div class="notice warn">المدفوعات المُسجَّلة تؤثر على أرصدة الصناديق وكشوف الشقق مباشرة.</div>
+  <div class="card">
+    <div class="ct am">تسجيل إيراد جديد</div>
+    <div class="fl">
+      <div class="fg"><label>التاريخ</label><input class="fc" type="date" id="in-date"></div>
+      <div class="fg"><label>الشقة</label><select class="fc" id="in-apt"><option value="">— عام / بدون شقة —</option></select></div>
+      <div class="fg"><label>نوع الإيراد</label>
+        <select class="fc" id="in-cat" onchange="updateInFund()">
+          <option value="q_emara">عمارة ربع سنوي</option>
+          <option value="q_asansir">أسانسير ربع سنوي</option>
+          <option value="q_both">عمارة + أسانسير معاً</option>
+          <option value="sawaid">صواعد</option>
+          <option value="old_payment">سداد دين قديم</option>
+          <option value="water_meter">عداد مياه</option>
+          <option value="return">مرتد / عائد</option>
+          <option value="other">أخرى</option>
+        </select>
+      </div>
+      <div class="fg" id="in-q-wrap"><label>الربع</label>
+        <select class="fc" id="in-quarter"><option value="Q1">Q1 — يناير–مارس</option><option value="Q2">Q2 — أبريل–يونيو</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
+      </div>
+      <div class="fg" id="in-fund-wrap"><label>الصندوق</label>
+        <select class="fc" id="in-fund"><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
+      </div>
+    </div>
+    <div class="fl">
+      <div class="fg" style="flex:2"><label>البيان</label><input class="fc" type="text" id="in-desc" placeholder="مثال: Q2 عمارة + أسانسير"></div>
+      <div class="fg"><label>المبلغ (ج.م)</label><input class="fc" type="number" id="in-amount" placeholder="600" min="1"></div>
+      <div style="padding-top:18px"><button class="btn btn-gr" onclick="addIncome()">✓ تسجيل</button></div>
+    </div>
+    <div id="in-msg" style="font-size:12px;margin-top:6px;min-height:18px"></div>
+  </div>
+  <div class="card">
+    <div class="ct am">سجل الإيرادات <span id="in-total" style="margin-right:auto;font-size:12px;font-weight:400" class="c-gr"></span></div>
+    <div class="search-r">
+      <input class="fc" type="text" id="in-s" placeholder="بحث..." oninput="renderIncome()" style="max-width:200px">
+      <select class="fc" id="in-ff" onchange="renderIncome()" style="max-width:150px"><option value="">كل الصناديق</option><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
+      <select class="fc" id="in-fq" onchange="renderIncome()" style="max-width:130px"><option value="">كل الأرباع</option><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select>
+      <button class="btn btn-am btn-sm" onclick="exportExcel('income')" style="margin-right:auto">⬇ Excel</button>
+    </div>
+    <div class="tw"><table><thead><tr><th>التاريخ</th><th>الشقة</th><th>البيان</th><th>النوع</th><th>الصندوق</th><th>الربع</th><th>المبلغ</th><th></th></tr></thead>
+    <tbody id="in-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ══════ EXPENSE ══════ -->
+<div class="pg" id="pg-expense">
+  <div class="card">
+    <div class="ct am">تسجيل مصروف / تحويل</div>
+    <div class="fl">
+      <div class="fg"><label>التاريخ</label><input class="fc" type="date" id="ex-date"></div>
+      <div class="fg"><label>النوع</label>
+        <select class="fc" id="ex-type" onchange="toggleTransfer()"><option value="expense">مصروف</option><option value="transfer">تحويل بين الصناديق</option></select>
+      </div>
+      <div class="fg"><label>من صندوق</label>
+        <select class="fc" id="ex-fund"><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
+      </div>
+      <div class="fg" id="ex-to-wr" style="display:none"><label>إلى صندوق</label>
+        <select class="fc" id="ex-tofund"><option value="asansir">الأسانسير</option><option value="emara">العمارة</option></select>
+      </div>
+      <div class="fg" id="ex-cat-wr"><label>التصنيف</label>
+        <select class="fc" id="ex-cat"><option>نظافة</option><option>صيانة</option><option>كهرباء</option><option>أمن</option><option>إدارة</option><option>أخرى</option></select>
+      </div>
+    </div>
+    <div class="fl">
+      <div class="fg" style="flex:2"><label>البيان</label><input class="fc" type="text" id="ex-desc" placeholder="مثال: نظافة السلم — أبريل"></div>
+      <div class="fg"><label>المبلغ (ج.م)</label><input class="fc" type="number" id="ex-amount" placeholder="150" min="1"></div>
+      <div style="padding-top:18px"><button class="btn btn-rd" onclick="addExpense()">✓ تسجيل</button></div>
+    </div>
+    <div id="ex-msg" style="font-size:12px;margin-top:6px;min-height:18px"></div>
+  </div>
+  <div class="card">
+    <div class="ct am">سجل المصروفات <span id="ex-total" style="margin-right:auto;font-size:12px;font-weight:400" class="c-rd"></span></div>
+    <div class="search-r">
+      <input class="fc" type="text" id="ex-s" placeholder="بحث..." oninput="renderExpenses()" style="max-width:200px">
+      <select class="fc" id="ex-ff" onchange="renderExpenses()" style="max-width:150px"><option value="">كل الصناديق</option><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
+      <button class="btn btn-am btn-sm" onclick="exportExcel('expense')" style="margin-right:auto">⬇ Excel</button>
+    </div>
+    <div class="tw"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الصندوق</th><th>التصنيف</th><th>المبلغ</th><th></th></tr></thead>
+    <tbody id="ex-tbody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ══════ LEDGER ══════ -->
+<div class="pg" id="pg-ledger">
+  <div class="card">
+    <div class="ct am">دفتر الحسابات الكامل</div>
+    <div class="search-r">
+      <input class="fc" type="text" id="lg-s" placeholder="بحث..." oninput="renderLedger()" style="max-width:200px">
+      <select class="fc" id="lg-ft" onchange="renderLedger()" style="max-width:140px"><option value="">كل الأنواع</option><option value="income">إيرادات</option><option value="expense">مصروفات</option><option value="transfer">تحويلات</option></select>
+      <select class="fc" id="lg-ff" onchange="renderLedger()" style="max-width:140px"><option value="">كل الصناديق</option><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
+      <span id="lg-cnt" style="font-size:11px;color:var(--tx3)"></span>
+      <button class="btn btn-am btn-sm" onclick="exportExcel('all')" style="margin-right:auto">⬇ Excel كامل</button>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>التاريخ</th><th>البيان</th><th>الشقة</th><th>الصندوق</th><th>النوع</th><th>الفئة</th><th>الربع</th><th>دائن</th><th>مدين</th></tr></thead>
+      <tbody id="lg-tbody"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ══════ CHARGES ══════ -->
+<div class="pg" id="pg-charges">
+  <div class="notice warn">البنود الجماعية تُضاف كدين على كل شقة مشمولة وتظهر في كشف حسابها.</div>
+  <div class="card">
+    <div class="ct am">إضافة بند جماعي جديد</div>
+    <div class="fl">
+      <div class="fg" style="flex:2"><label>اسم البند</label><input class="fc" type="text" id="ch-name" placeholder="مثال: صواعد 2026، تنظيف المدخل..."></div>
+      <div class="fg"><label>التاريخ</label><input class="fc" type="date" id="ch-date"></div>
+      <div class="fg"><label>الصندوق</label>
+        <select class="fc" id="ch-fund"><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
+      </div>
+    </div>
+    <div class="fl">
+      <div class="fg"><label>المبلغ للمقيم (ج.م)</label><input class="fc" type="number" id="ch-mq" placeholder="250" min="0" oninput="previewCharge()"></div>
+      <div class="fg"><label>المبلغ لغير المقيم (ج.م)</label><input class="fc" type="number" id="ch-gm" placeholder="250" min="0" oninput="previewCharge()"></div>
+      <div class="fg"><label>الأدوار المشمولة</label>
+        <select class="fc" id="ch-floors" multiple style="height:80px" onchange="previewCharge()">
+          <option value="all" selected>الكل</option>
+          <option value="أرضي">أرضي</option><option value="أول">أول</option>
+          <option value="ثاني">ثاني</option><option value="ثالث">ثالث</option><option value="رابع">رابع</option>
+        </select>
+      </div>
+    </div>
+    <div id="ch-preview" style="background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;font-size:12px;color:var(--tx2);margin-bottom:12px">أدخل المبالغ لمعاينة الشقق المشمولة</div>
+    <button class="btn btn-gr" onclick="addCharge()">✓ إضافة البند</button>
+    <div id="ch-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div>
+  </div>
+  <div class="card">
+    <div class="ct am">البنود الجماعية المسجلة</div>
+    <div id="ch-list"></div>
+  </div>
+</div>
+
+<!-- ══════ UPLOAD ══════ -->
+<div class="pg" id="pg-upload">
+  <div class="card">
+    <div class="ct am">تحميل قوالب Excel</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="background:var(--gr-bg);border:1px solid var(--gr-bd);border-radius:var(--r);padding:16px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--gr)">قالب الإيرادات</div>
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">مدفوعات الشقق: تاريخ، رقم الشقة، الصندوق، النوع، الربع، المبلغ، البيان</div>
+        <button class="btn btn-gr" onclick="downloadTemplate('income')">⬇ تحميل القالب</button>
+      </div>
+      <div style="background:var(--rd-bg);border:1px solid var(--rd-bd);border-radius:var(--r);padding:16px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;color:var(--rd)">قالب المصروفات</div>
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:12px">مصروفات العمارة: تاريخ، الصندوق، التصنيف، المبلغ، البيان</div>
+        <button class="btn btn-rd" onclick="downloadTemplate('expense')">⬇ تحميل القالب</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct am">رفع ملف Excel</div>
+    <div class="notice">الملف يجب أن يكون بنفس شكل القالب. الصفوف التي تحتوي أخطاء يتجاهلها النظام.</div>
+    <div class="fl" style="align-items:center">
+      <div class="fg" style="max-width:180px"><label>نوع الملف</label>
+        <select class="fc" id="up-type"><option value="income">إيرادات</option><option value="expense">مصروفات</option></select>
+      </div>
+      <div class="fg"><label>اختر الملف</label>
+        <input type="file" id="up-file" accept=".xlsx,.xls" class="fc" style="padding:6px" onchange="previewUpload()">
+      </div>
+    </div>
+    <div id="up-preview"></div>
+    <div id="up-msg" style="font-size:12px;margin-top:8px;min-height:18px"></div>
+  </div>
+</div>
+
+<!-- ══════ APT DATA (admin) ══════ -->
+<div class="pg" id="pg-aptdata">
+  <div class="notice">التغييرات تُحفظ فوراً وتنعكس على كل الحسابات والكشوف.</div>
+  <div class="card">
+    <div class="ct am">بيانات الشقق — تعديل مباشر</div>
+    <div class="search-r">
+      <input class="fc" type="text" id="ad-s" placeholder="بحث بالاسم أو الرقم..." oninput="renderAptData()" style="max-width:220px">
+      <select class="fc" id="ad-fl" onchange="renderAptData()" style="max-width:150px">
+        <option value="">كل الأدوار</option>
+        <option>أرضي</option><option>أول</option><option>ثاني</option><option>ثالث</option><option>رابع</option>
+      </select>
+      <button class="btn btn-gy btn-sm" onclick="if(confirm('استعادة بيانات الشقق الأصلية؟')){localStorage.removeItem(KA);APTS=JSON.parse(JSON.stringify(APTS_DEFAULT));renderAptData();renderAptGrid();}">↺ استعادة الأصلية</button>
+    </div>
+    <div class="tw"><table id="apt-data-tbl">
+      <thead><tr><th>رقم</th><th>المالك</th><th>الدور</th><th>الحالة</th><th>عمارة/ربع</th><th>أسانسير/ربع</th><th></th></tr></thead>
+      <tbody id="ad-tbody"></tbody>
+    </table></div>
+  </div>
+  <!-- Add new apt -->
+  <div class="card">
+    <div class="ct am">إضافة شقة جديدة</div>
+    <div class="fl">
+      <div class="fg" style="max-width:100px"><label>رقم الشقة</label><input class="fc" type="text" id="na-num" placeholder="501"></div>
+      <div class="fg"><label>اسم المالك</label><input class="fc" type="text" id="na-name" placeholder="أ / محمد..."></div>
+      <div class="fg"><label>الدور</label>
+        <select class="fc" id="na-floor"><option>أرضي</option><option>أول</option><option>ثاني</option><option>ثالث</option><option>رابع</option><option>خامس</option></select>
+      </div>
+      <div class="fg"><label>الحالة</label>
+        <select class="fc" id="na-status"><option value="مقيم">مقيم</option><option value="غير مقيم">غير مقيم</option></select>
+      </div>
+      <div class="fg" style="max-width:110px"><label>عمارة/ربع ج</label><input class="fc" type="number" id="na-qe" placeholder="150" value="150"></div>
+      <div class="fg" style="max-width:110px"><label>أسانسير/ربع ج</label><input class="fc" type="number" id="na-qa" placeholder="0" value="0"></div>
+      <div style="padding-top:18px"><button class="btn btn-gr" onclick="addNewApt()">+ إضافة</button></div>
+    </div>
+    <div id="na-msg" style="font-size:12px;min-height:18px;margin-top:6px"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════
+const APTS_DEFAULT=[
+  {a:"001",n:"أ / أمل",f:"أرضي",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
+  {a:"002",n:"ك / طارق",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"003",n:"أ / أحمد عزازى",f:"أرضي",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
+  {a:"004",n:"أ / محمد زناتى",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"005",n:"م / سعد",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:400,a25:0,m26:300}},
+  {a:"006",n:"أ / عادل",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:900,a25:0,m26:300}},
+  {a:"007",n:"أ / أحمد",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:1200,a25:0,m26:300}},
+  {a:"008",n:"أ / محمد",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:1200,a25:0,m26:300}},
+  {a:"101",n:"أ / محمد مشير",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:450,a25:0,m26:150}},
+  {a:"102",n:"أ / عمرو",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:0,e25:300,a25:0,m26:150}},
+  {a:"103",n:"أ / أحمد عزازى",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
+  {a:"104",n:"أ / مصطفى باسم",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:0,asnr:0,water:400,e25:300,a25:0,m26:150}},
+  {a:"105",n:"أ / أحمد شريف",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
+  {a:"106",n:"م / زيزى",f:"أول",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:250,asnr:0,water:0,e25:600,a25:0,m26:300}},
+  {a:"107",n:"أ / سيد فؤاد",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"108",n:"أ / عمر",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"201",n:"أ / محمد خالد",f:"ثاني",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:500,water:0,e25:300,a25:300,m26:600}},
+  {a:"202",n:"أ / علاء",f:"ثاني",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
+  {a:"203",n:"أ / مصطفى",f:"ثاني",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:500,water:400,e25:450,a25:600,m26:300}},
+  {a:"204",n:"م / نشوى",f:"ثاني",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"205",n:"أ / أحمد عثمان",f:"ثاني",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:300,a25:0,m26:0}},
+  {a:"206",n:"أ / نهاد",f:"ثاني",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"207",n:"أ / نهاد",f:"ثاني",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"208",n:"أ / محمود",f:"ثاني",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"301",n:"م / ياسر",f:"ثالث",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"302",n:"أ / ايمن",f:"ثالث",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:600}},
+  {a:"303",n:"أ / أسامة",f:"ثالث",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:500,water:0,e25:50,a25:150,m26:300}},
+  {a:"304",n:"أ / خالد",f:"ثالث",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"305",n:"أ / أحمد",f:"ثالث",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:0,e25:600,a25:600,m26:300}},
+  {a:"306",n:"أ / دينا",f:"ثالث",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
+  {a:"307",n:"م / اسر البهنساوى",f:"ثالث",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"308",n:"أ / بسام",f:"ثالث",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"401",n:"م / مها",f:"رابع",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:-1800}},
+  {a:"402",n:"أ / ابراهيم",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:500,water:0,e25:300,a25:300,m26:300}},
+  {a:"403",n:"أ / محمد عبد الغفار",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:0,e25:600,a25:600,m26:300}},
+  {a:"404",n:"أ / محمد زكى",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:0,e25:150,a25:600,m26:300}},
+  {a:"405",n:"أ / كريم",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:500,water:0,e25:450,a25:450,m26:300}},
+  {a:"406",n:"م / مصطفى",f:"رابع",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:250,asnr:0,water:0,e25:450,a25:450,m26:600}},
+  {a:"407",n:"م / هيام",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
+  {a:"408",n:"أ / أحمد عساف",f:"رابع",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+];
+
+const CAT_LABELS={'q_emara':'عمارة ربع سنوي','q_asansir':'أسانسير ربع سنوي','sawaid':'صواعد','old_payment':'دين قديم','water_meter':'عداد مياه','return':'مرتد','other':'أخرى','opening':'رصيد أول المدة'};
+
+const SEED=[
+  {id:'s0',date:'2026-01-01',type:'income',fund:'emara',apt:'',aptN:'',amount:4040,desc:'رصيد أول المدة',cat:'opening',quarter:''},
+  {id:'se02',date:'2026-03-31',type:'income',fund:'emara',apt:'002',aptN:'ك / طارق',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se04a',date:'2026-03-31',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se04b',date:'2026-04-30',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
+  {id:'se107',date:'2026-03-31',type:'income',fund:'emara',apt:'107',aptN:'أ / سيد فؤاد',amount:150,desc:'عمارة Q1 جزئي',cat:'q_emara',quarter:'Q1'},
+  {id:'se108',date:'2026-03-31',type:'income',fund:'emara',apt:'108',aptN:'أ / عمر',amount:300,desc:'عمارة Q1 + رصيد مقدم',cat:'q_emara',quarter:'Q1'},
+  {id:'se204e',date:'2026-03-31',type:'income',fund:'emara',apt:'204',aptN:'م / نشوى',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se205ea',date:'2026-03-31',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se205eb',date:'2026-04-30',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
+  {id:'se206e',date:'2026-03-31',type:'income',fund:'emara',apt:'206',aptN:'أ / نهاد',amount:75,desc:'عمارة Q1 جزئي',cat:'q_emara',quarter:'Q1'},
+  {id:'se207e',date:'2026-03-31',type:'income',fund:'emara',apt:'207',aptN:'أ / نهاد',amount:75,desc:'عمارة Q1 جزئي',cat:'q_emara',quarter:'Q1'},
+  {id:'se208e',date:'2026-03-31',type:'income',fund:'emara',apt:'208',aptN:'أ / محمود',amount:150,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se301ea',date:'2026-03-31',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se301eb',date:'2026-04-30',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
+  {id:'se304e',date:'2026-03-31',type:'income',fund:'emara',apt:'304',aptN:'أ / خالد',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se307e',date:'2026-03-31',type:'income',fund:'emara',apt:'307',aptN:'م / اسر البهنساوى',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se308ea',date:'2026-03-31',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se308eb',date:'2026-04-30',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
+  {id:'se401ea',date:'2026-03-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'se401eb',date:'2026-06-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
+  {id:'se401ec',date:'2026-09-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:300,desc:'عمارة Q3',cat:'q_emara',quarter:'Q3'},
+  {id:'se401ed',date:'2026-12-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:300,desc:'عمارة Q4',cat:'q_emara',quarter:'Q4'},
+  {id:'se408e',date:'2026-03-31',type:'income',fund:'emara',apt:'408',aptN:'أ / أحمد عساف',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
+  {id:'sa204',date:'2026-03-31',type:'income',fund:'asansir',apt:'204',aptN:'م / نشوى',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa205',date:'2026-03-31',type:'income',fund:'asansir',apt:'205',aptN:'أ / أحمد عثمان',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa206',date:'2026-03-31',type:'income',fund:'asansir',apt:'206',aptN:'أ / نهاد',amount:75,desc:'أسانسير Q1 جزئي',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa207',date:'2026-03-31',type:'income',fund:'asansir',apt:'207',aptN:'أ / نهاد',amount:75,desc:'أسانسير Q1 جزئي',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa208',date:'2026-03-31',type:'income',fund:'asansir',apt:'208',aptN:'أ / محمود',amount:150,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa301a',date:'2026-03-31',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa301b',date:'2026-04-30',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:300,desc:'أسانسير Q2',cat:'q_asansir',quarter:'Q2'},
+  {id:'sa304',date:'2026-03-31',type:'income',fund:'asansir',apt:'304',aptN:'أ / خالد',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa305',date:'2026-04-30',type:'income',fund:'asansir',apt:'305',aptN:'أ / أحمد',amount:300,desc:'أسانسير Q2',cat:'q_asansir',quarter:'Q2'},
+  {id:'sa307',date:'2026-03-31',type:'income',fund:'asansir',apt:'307',aptN:'م / اسر البهنساوى',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa308a',date:'2026-03-31',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa308b',date:'2026-04-30',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:300,desc:'أسانسير Q2',cat:'q_asansir',quarter:'Q2'},
+  {id:'sa401a',date:'2026-03-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'sa401b',date:'2026-06-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:300,desc:'أسانسير Q2',cat:'q_asansir',quarter:'Q2'},
+  {id:'sa401c',date:'2026-09-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:300,desc:'أسانسير Q3',cat:'q_asansir',quarter:'Q3'},
+  {id:'sa401d',date:'2026-12-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:300,desc:'أسانسير Q4',cat:'q_asansir',quarter:'Q4'},
+  {id:'sa408',date:'2026-03-31',type:'income',fund:'asansir',apt:'408',aptN:'أ / أحمد عساف',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+  {id:'srev1',date:'2026-04-01',type:'income',fund:'emara',apt:'',aptN:'',amount:250,desc:'عائد صواعد — شقة 208',cat:'return',quarter:''},
+  {id:'sx1',date:'2026-01-31',type:'expense',fund:'emara',amount:150,desc:'نظافة السلم — يناير',cat:'نظافة'},
+  {id:'sx2',date:'2026-02-28',type:'expense',fund:'emara',amount:150,desc:'نظافة السلم — فبراير',cat:'نظافة'},
+  {id:'sx3',date:'2026-03-31',type:'expense',fund:'emara',amount:150,desc:'نظافة السلم — مارس',cat:'نظافة'},
+  {id:'sx4',date:'2026-03-31',type:'expense',fund:'emara',amount:200,desc:'تصليح الصرف',cat:'صيانة'},
+  {id:'sx5',date:'2026-03-31',type:'expense',fund:'emara',amount:425,desc:'تصليح بطارية شقق الدور الأول',cat:'صيانة'},
+  {id:'str1',date:'2026-03-31',type:'transfer',fund:'asansir',toFund:'emara',amount:6000,desc:'تحويل من صندوق الأسانسير للعمارة'},
+];
+
+// ════════════════════════════
+// STORAGE
+// ════════════════════════════
+const KT='bms5_txn',KI='bms5_init',KC='bms5_charges',KA='bms5_apts';
+function load(){try{return JSON.parse(localStorage.getItem(KT)||'[]')}catch{return[]}}
+function save(a){localStorage.setItem(KT,JSON.stringify(a))}
+function loadCharges(){try{return JSON.parse(localStorage.getItem(KC)||'[]')}catch{return[]}}
+function saveCharges(a){localStorage.setItem(KC,JSON.stringify(a))}
+function loadAptsCustom(){try{return JSON.parse(localStorage.getItem(KA)||'null')}catch{return null}}
+function saveAptsCustom(a){localStorage.setItem(KA,JSON.stringify(a))}
+// Active apartments — use custom if saved
+let APTS=loadAptsCustom()||JSON.parse(JSON.stringify(APTS_DEFAULT));
+function initData(){if(!localStorage.getItem(KI)){save(SEED);localStorage.setItem(KI,'1');}}
+function resetToSeed(){
+  if(!confirm('سيتم حذف كل البيانات المُدخلة يدوياً وإعادة التهيئة. متأكد؟'))return;
+  localStorage.removeItem(KT);localStorage.removeItem(KI);localStorage.removeItem(KC);localStorage.removeItem(KA);
+  APTS=JSON.parse(JSON.stringify(APTS_DEFAULT));
+  initData();renderAptGrid();renderOverview();
+  alert('✓ تمت إعادة التهيئة');
+}
+
+// ════════════════════════════
+// CALC HELPERS
+// ════════════════════════════
+const L=n=>Math.round(Math.abs(n)).toLocaleString('ar-EG');
+function fundBal(txns,fund){
+  return txns.reduce((s,t)=>{
+    if(t.type==='income'&&t.fund===fund)return s+t.amount;
+    if(t.type==='expense'&&t.fund===fund)return s-t.amount;
+    if(t.type==='transfer'&&t.fund===fund)return s-t.amount;
+    if(t.type==='transfer'&&t.toFund===fund)return s+t.amount;
+    return s;
+  },0);
+}
+function aptPaidQ(txns,aptNum,cat,q){
+  return txns.filter(t=>t.apt===aptNum&&t.cat===cat&&t.quarter===q&&t.type==='income').reduce((s,t)=>s+t.amount,0);
+}
+function aptOtherPaid(txns,aptNum){
+  return txns.filter(t=>t.apt===aptNum&&t.type==='income'&&!['q_emara','q_asansir'].includes(t.cat));
+}
+function odTotal(apt){
+  const {m26,...rest}=apt.od;
+  const base=Object.values(rest).reduce((s,v)=>s+v,0);
+  // m26 > 0 = debt already tracked in Q1 → exclude
+  // m26 < 0 = رصيد دائن for the apartment → keep as credit
+  return base + (m26<0 ? m26 : 0);
+}
+function aptMatchesCharge(apt,ch){return ch.floors==='all'||ch.floors.includes(apt.f);}
+function chargeAmt(apt,ch){return apt.s==='مقيم'?ch.amt_mq:ch.amt_gm;}
+function chargePaid(txns,aptNum,chId){return txns.filter(t=>t.apt===aptNum&&t.type==='income'&&t.cat==='charge_'+chId).reduce((s,t)=>s+t.amount,0);}
+function aptNet(apt,txns){
+  const pe1=aptPaidQ(txns,apt.a,'q_emara','Q1'),pe2=aptPaidQ(txns,apt.a,'q_emara','Q2');
+  const pa1=aptPaidQ(txns,apt.a,'q_asansir','Q1'),pa2=aptPaidQ(txns,apt.a,'q_asansir','Q2');
+  const others=aptOtherPaid(txns,apt.a).reduce((s,t)=>s+t.amount,0);
+  const charges=loadCharges().filter(c=>aptMatchesCharge(apt,c));
+  const chDue=charges.reduce((s,c)=>s+chargeAmt(apt,c),0);
+  const chPaid=charges.reduce((s,c)=>s+chargePaid(txns,apt.a,c.id),0);
+  const paid=pe1+pe2+pa1+pa2+others+chPaid;
+  const due=(apt.qt_e+apt.qt_a)*2+chDue;
+  return{paid,due,net:paid-due};
+}
+
+// ════════════════════════════
+// AUTH
+// ════════════════════════════
+const PWD='osman2025';
+let isAdmin=false;
+function tryLogin(){
+  if(document.getElementById('pwdInput').value===PWD){
+    isAdmin=true;document.getElementById('loginOverlay').style.display='none';showAdminTabs();renderAptGrid();
+  }else{document.getElementById('pwd-err').textContent='باسورد غير صحيح';}
+}
+function guestMode(){document.getElementById('loginOverlay').style.display='none';renderAptGrid();}
+function showAdminTabs(){
+  ['tab-income','tab-expense','tab-ledger','tab-charges','tab-upload','tab-aptdata'].forEach(id=>document.getElementById(id).style.display='');
+  document.getElementById('resetBtn').style.display='';
+  document.getElementById('lockBtn').textContent='🔓 خروج';
+  document.getElementById('lockBtn').className='lock-btn open';
+}
+function toggleLock(){
+  if(isAdmin){
+    isAdmin=false;
+    ['tab-income','tab-expense','tab-ledger','tab-charges','tab-upload','tab-aptdata'].forEach(id=>document.getElementById(id).style.display='none');
+    document.getElementById('resetBtn').style.display='none';
+    document.getElementById('lockBtn').textContent='🔒 إدارة';
+    document.getElementById('lockBtn').className='lock-btn';
+    go('apts');
+  }else{
+    document.getElementById('loginOverlay').style.display='flex';
+    document.getElementById('pwdInput').value='';
+    document.getElementById('pwd-err').textContent='';
+  }
+}
+
+// ════════════════════════════
+// TABS
+// ════════════════════════════
+function go(id){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');
+  const btn=document.querySelector(`.nb[onclick="go('${id}')"]`);
+  if(btn)btn.classList.add('on');
+  const m={apts:renderAptGrid,overview:renderOverview,income:renderIncome,expense:renderExpenses,ledger:renderLedger,charges:renderCharges,upload:()=>{},stmt:()=>{},aptdata:renderAptData};
+  if(m[id])m[id]();
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════
+// APT GRID
+// ════════════════════════════
+function renderAptGrid(){
+  const txns=load();
+  const q=document.getElementById('apt-search').value.toLowerCase();
+  const sf=document.getElementById('apt-filter').value;
+  const floors=['أرضي','أول','ثاني','ثالث','رابع'];
+  let html='';
+  floors.forEach(fl=>{
+    let apts=APTS.filter(a=>a.f===fl);
+    if(q) apts=apts.filter(a=>a.n.includes(q)||a.a.includes(q));
+    if(!apts.length)return;
+    const cards=apts.map(a=>{
+      const {paid,due,net}=aptNet(a,txns);
+      const od=odTotal(a);
+      let st='st-none';
+      if(net>=0) st='st-ok';
+      else if(paid>0) st='st-partial';
+      if(sf&&st!==sf)return'';
+      return`<div class="apt-card" onclick="openApt('${a.a}')">
+        <div class="apt-num">${a.a}</div>
+        <div class="apt-name">${a.n}</div>
+        ${net>0?`<div style="font-size:11px;font-weight:600;color:var(--gr);margin-top:4px">رصيد دائن: +${L(net)} ج</div>`:''}
+      </div>`;
+    }).join('');
+    if(!cards.replace(/\s/g,''))return;
+    html+=`<div class="floor-section"><div class="floor-label">الدور ${fl}</div><div class="apt-grid">${cards}</div></div>`;
+  });
+  document.getElementById('apt-grid-out').innerHTML=html||'<div class="empty">لا توجد شقق مطابقة</div>';
+}
+
+function openApt(aptNum){
+  const apt=APTS.find(a=>a.a===aptNum);if(!apt)return;
+  document.getElementById('stmtTitle').textContent=`${apt.n} — شقة ${apt.a}`;
+  document.getElementById('stmtBody').innerHTML=buildStmt(apt);
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pg-stmt').classList.add('on');
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════
+// STATEMENT (used in modal)
+// ════════════════════════════
+function buildStmt(apt){
+  const txns=load();
+  const qs=['Q1','Q2'];
+  const od=odTotal(apt);
+  const odRows=[{l:'صواعد',v:apt.od.sawaid},{l:'مساهمة أسانسير',v:apt.od.asnr},{l:'عداد مياه',v:apt.od.water},{l:'متأخرات عمارة 2025',v:apt.od.e25},{l:'متأخرات أسانسير 2025',v:apt.od.a25}].filter(r=>r.v!==0);
+  let qHtml='',totalDue=0,totalPaid26=0;
+  qs.forEach(q=>{
+    const pe=aptPaidQ(txns,apt.a,'q_emara',q),pa=aptPaidQ(txns,apt.a,'q_asansir',q);
+    if(apt.qt_e>0){
+      const st=pe>=apt.qt_e?'paid':pe>0?'partial':'unpaid';
+      qHtml+=`<div class="q-cell ${st}"><div class="q-label">عمارة — ${q}</div><div class="q-amount ${st==='paid'?'c-gr':st==='partial'?'c-am':'c-rd'}">${pe>0?L(pe)+' ج':L(apt.qt_e)+' ج'}</div><div class="q-sub">${st==='paid'?'✓ مدفوع':st==='partial'?'متبقي: '+L(apt.qt_e-pe)+' ج':'لم يُدفع'} | مطلوب: ${L(apt.qt_e)} ج</div></div>`;
+      totalDue+=apt.qt_e;totalPaid26+=pe;
+    }
+    if(apt.qt_a>0){
+      const st=pa>=apt.qt_a?'paid':pa>0?'partial':'unpaid';
+      qHtml+=`<div class="q-cell ${st}"><div class="q-label">أسانسير — ${q}</div><div class="q-amount ${st==='paid'?'c-gr':st==='partial'?'c-am':'c-rd'}">${pa>0?L(pa)+' ج':L(apt.qt_a)+' ج'}</div><div class="q-sub">${st==='paid'?'✓ مدفوع':st==='partial'?'متبقي: '+L(apt.qt_a-pa)+' ج':'لم يُدفع'} | مطلوب: ${L(apt.qt_a)} ج</div></div>`;
+      totalDue+=apt.qt_a;totalPaid26+=pa;
+    }
+  });
+  const others=aptOtherPaid(txns,apt.a);
+  const otherTotal=others.reduce((s,t)=>s+t.amount,0);
+  const charges=loadCharges().filter(c=>aptMatchesCharge(apt,c));
+  const chDue=charges.reduce((s,c)=>s+chargeAmt(apt,c),0);
+  const chPaid=charges.reduce((s,c)=>s+chargePaid(txns,apt.a,c.id),0);
+  const grandNet=totalPaid26+otherTotal+chPaid-totalDue-Math.max(od,0)-chDue;
+
+  return`
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+    <span class="bdg bdg-ac">الدور ${apt.f}</span>
+    <span class="bdg ${apt.s==='مقيم'?'bdg-gr':'bdg-gy'}">${apt.s}</span>
+    <span class="bdg bdg-gy">اشتراك ربعي: ${L(apt.qt_e+apt.qt_a)} ج</span>
+  </div>
+
+  ${odRows.length||apt.od.m26<0?`
+  <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">المستحقات السابقة</div>
+  ${odRows.length?`<div class="tw" style="margin-bottom:12px"><table>
+    <thead><tr><th>البند</th><th>المبلغ</th></tr></thead>
+    <tbody>
+      ${odRows.map(r=>`<tr><td>${r.l}</td><td class="${r.v>0?'c-rd':'c-gr'}">${r.v>0?L(r.v)+' ج':'رصيد دائن +'+L(Math.abs(r.v))+' ج'}</td></tr>`).join('')}
+      <tr style="background:var(--bg3)"><td style="font-weight:600">الإجمالي</td><td class="${od>0?'c-rd':'c-gr'}" style="font-weight:700">${od>0?L(od)+' ج مطلوبة':'رصيد دائن +'+L(Math.abs(od))+' ج'}</td></tr>
+    </tbody>
+  </table></div>`:''}
+  ${apt.od.m26<0?`<div class="notice ok" style="margin-bottom:12px">رصيد دائن من فترة سابقة: <strong>+${L(Math.abs(apt.od.m26))} ج</strong> — مُضاف لصالح الشقة في الحساب الكلي</div>`:''}`:
+  `<div class="notice ok" style="margin-bottom:14px">✓ لا توجد مستحقات سابقة</div>`}
+
+  <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">مستحقات 2026</div>
+  <div class="q-grid" style="margin-bottom:8px">${qHtml}</div>
+  <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;margin-bottom:16px">
+    <span class="c-tx2">مدفوع: <strong class="c-gr">${L(totalPaid26)} ج</strong></span>
+    <span class="c-tx2">مطلوب: <strong>${L(totalDue)} ج</strong></span>
+    <strong class="${totalPaid26>=totalDue?'c-gr':'c-rd'}">${totalPaid26>=totalDue?'✓ ملتزم':'متبقي: '+L(totalDue-totalPaid26)+' ج'}</strong>
+  </div>
+
+  ${charges.length?`
+  <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">بنود جماعية</div>
+  <div class="tw" style="margin-bottom:16px"><table>
+    <thead><tr><th>البند</th><th>المطلوب</th><th>المدفوع</th><th>الحالة</th></tr></thead>
+    <tbody>${charges.map(c=>{
+      const due=chargeAmt(apt,c),paid=chargePaid(txns,apt.a,c.id);
+      const st=paid>=due?'paid':paid>0?'partial':'unpaid';
+      return`<tr><td>${c.name}</td><td>${L(due)} ج</td><td class="${st==='paid'?'c-gr':st==='partial'?'c-am':''}">${paid>0?L(paid)+' ج':'—'}</td><td><span class="bdg ${st==='paid'?'bdg-gr':st==='partial'?'bdg-am':'bdg-rd'}">${st==='paid'?'مدفوع':st==='partial'?'جزئي':'لم يُدفع'}</span></td></tr>`;
+    }).join('')}</tbody>
+  </table></div>`:''}
+
+  ${others.length?`
+  <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">مدفوعات أخرى</div>
+  <div class="tw" style="margin-bottom:16px"><table>
+    <thead><tr><th>التاريخ</th><th>البيان</th><th>الفئة</th><th>المبلغ</th></tr></thead>
+    <tbody>${others.map(t=>`<tr><td>${t.date}</td><td>${t.desc}</td><td><span class="bdg bdg-gy">${CAT_LABELS[t.cat]||t.cat}</span></td><td class="c-gr">+${L(t.amount)} ج</td></tr>`).join('')}</tbody>
+  </table></div>`:''}
+
+  <div style="background:${grandNet>=0?'var(--gr-bg)':'var(--rd-bg)'};border:1.5px solid ${grandNet>=0?'var(--gr-bd)':'var(--rd-bd)'};border-radius:var(--r);padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-weight:600;font-size:14px">إجمالي الوضع</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:3px">مستحقات سابقة: ${L(Math.max(od,0))} ج | مستحقات 2026: ${L(Math.max(totalDue-totalPaid26,0))} ج${chDue?' | بنود إضافية: '+L(Math.max(chDue-chPaid,0))+' ج':''}${apt.od.m26<0?' | رصيد دائن سابق: +'+L(Math.abs(apt.od.m26))+' ج':''}</div>
+    </div>
+    <div style="font-size:22px;font-weight:700;color:${grandNet>=0?'var(--gr)':'var(--rd)'}">${grandNet>=0?'رصيد دائن +':'إجمالي المستحقات: '}${L(Math.abs(grandNet))} ج</div>
+  </div>`;
+}
+
+// ════════════════════════════
+// OVERVIEW
+// ════════════════════════════
+function renderOverview(){
+  const txns=load();
+  const ebal=fundBal(txns,'emara'),abal=fundBal(txns,'asansir');
+  const totalIn=txns.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const settled=APTS.filter(a=>aptNet(a,txns).net>=0).length;
+  document.getElementById('ov-kpis').innerHTML=`
+    <div class="kc"><div class="kl">صندوق العمارة</div><div class="kv c-gr">${L(ebal)} ج</div><div class="ks">رصيد متاح</div></div>
+    <div class="kc"><div class="kl">صندوق الأسانسير</div><div class="kv c-tl">${L(abal)} ج</div><div class="ks">رصيد متاح</div></div>
+    <div class="kc"><div class="kl">إجمالي محصّل</div><div class="kv c-ac">${L(totalIn)} ج</div><div class="ks">${txns.filter(t=>t.type==='income').length} عملية</div></div>
+    <div class="kc"><div class="kl">شقق ملتزمة</div><div class="kv c-am">${settled}<span style="font-size:14px;color:var(--tx3)"> / ${APTS.length}</span></div><div class="ks">كل المستحقات</div></div>`;
+  document.getElementById('ov-funds').innerHTML=`
+    <div class="fc2"><div class="fn">صندوق العمارة</div><div class="fa ${ebal>=0?'c-gr':'c-rd'}">${L(ebal)} ج</div>
+      <div class="fd">إيرادات: ${L(txns.filter(t=>t.type==='income'&&t.fund==='emara').reduce((s,t)=>s+t.amount,0))} ج | مصروفات: ${L(txns.filter(t=>t.type==='expense'&&t.fund==='emara').reduce((s,t)=>s+t.amount,0))} ج</div>
+      <div class="prog"><div class="pf" style="width:${Math.min(100,Math.round(ebal/20000*100))}%;background:var(--gr)"></div></div></div>
+    <div class="fc2"><div class="fn">صندوق الأسانسير</div><div class="fa ${abal>=0?'c-tl':'c-rd'}">${L(abal)} ج</div>
+      <div class="fd">إيرادات: ${L(txns.filter(t=>t.type==='income'&&t.fund==='asansir').reduce((s,t)=>s+t.amount,0))} ج | تحويلات: ${L(txns.filter(t=>t.type==='transfer'&&t.fund==='asansir').reduce((s,t)=>s+t.amount,0))} ج</div>
+      <div class="prog"><div class="pf" style="width:${Math.min(100,Math.max(0,Math.round(abal/10000*100)))}%;background:var(--tl)"></div></div></div>`;
+  // Stats
+  const mqC=APTS.filter(a=>a.s==='مقيم').length,gmC=APTS.filter(a=>a.s==='غير مقيم').length;
+  const eQ1=APTS.filter(a=>aptPaidQ(txns,a.a,'q_emara','Q1')>=a.qt_e).length;
+  const eQ2=APTS.filter(a=>aptPaidQ(txns,a.a,'q_emara','Q2')>=a.qt_e).length;
+  const asApts=APTS.filter(a=>a.qt_a>0);
+  const aQ1=asApts.filter(a=>aptPaidQ(txns,a.a,'q_asansir','Q1')>=a.qt_a).length;
+  const aQ2=asApts.filter(a=>aptPaidQ(txns,a.a,'q_asansir','Q2')>=a.qt_a).length;
+  const sawaidOwed=APTS.filter(a=>a.od.sawaid>0);
+  const sawaidPaid=[...new Set(txns.filter(t=>t.cat==='sawaid'&&t.apt).map(t=>t.apt))];
+  const expByCat={};txns.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.cat||'أخرى']=(expByCat[t.cat||'أخرى']||0)+t.amount;});
+  function pb(v,mx,c){const p=Math.round(v/mx*100);return`<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><div style="flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="width:${p}%;height:100%;background:${c}"></div></div><span style="font-size:11px;color:${c};min-width:36px">${p}% (${v})</span></div>`;}
+  document.getElementById('ov-stats').innerHTML=`
+  <div class="card">
+    <div class="ct">إحصائيات السكان</div>
+    <div style="display:flex;gap:12px;margin-bottom:14px">
+      <div style="flex:1;background:var(--ac-bg);border:1px solid #bfdbfe;border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--ac)">${mqC}</div><div style="font-size:11px;color:var(--tx3)">مقيم</div></div>
+      <div style="flex:1;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--tx2)">${gmC}</div><div style="font-size:11px;color:var(--tx3)">غير مقيم</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:3px;font-weight:500">التزام عمارة Q1</div>${pb(eQ1,40,'var(--gr)')}
+    <div style="font-size:12px;color:var(--tx2);margin:8px 0 3px;font-weight:500">التزام عمارة Q2</div>${pb(eQ2,40,'var(--gr)')}
+    <div style="font-size:12px;color:var(--tx2);margin:8px 0 3px;font-weight:500">التزام أسانسير Q1</div>${pb(aQ1,asApts.length,'var(--tl)')}
+    <div style="font-size:12px;color:var(--tx2);margin:8px 0 3px;font-weight:500">التزام أسانسير Q2</div>${pb(aQ2,asApts.length,'var(--tl)')}
+    <div style="height:8px"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--bd)">
+      <div><div style="font-size:13px;font-weight:500">صواعد 2025</div><div style="font-size:11px;color:var(--tx3)">${sawaidOwed.length} شقة عليها صواعد | ${sawaidPaid.length} سدّدوا</div></div>
+      <span class="bdg ${sawaidPaid.length===sawaidOwed.length?'bdg-gr':'bdg-am'}">${sawaidPaid.length} / ${sawaidOwed.length}</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct">تفصيل المصروفات</div>
+    ${Object.keys(expByCat).length?Object.entries(expByCat).sort((a,b)=>b[1]-a[1]).map(([c,v])=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)">
+        <span class="bdg bdg-gy">${c}</span><span class="c-rd" style="font-weight:600">−${L(v)} ج</span>
+      </div>`).join('')+`<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:600"><span>الإجمالي</span><span class="c-rd">${L(Object.values(expByCat).reduce((s,v)=>s+v,0))} ج</span></div>`:
+    '<div class="empty" style="padding:16px">لا توجد مصروفات</div>'}
+  </div>`;
+  // Recent expenses
+  const rec=[...txns].filter(t=>t.type!=='income').sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  document.getElementById('ov-recent').innerHTML=rec.map(t=>`<tr class="${t.type==='expense'?'r-ex':'r-tr'}">
+    <td>${t.date}</td><td>${t.desc}</td>
+    <td style="color:${t.fund==='emara'?'var(--ac)':'var(--tl)'}">${t.fund==='emara'?'عمارة':'أسانسير'}</td>
+    <td>${t.cat?`<span class="bdg bdg-gy">${t.cat}</span>`:t.type==='transfer'?'<span class="bdg bdg-am">تحويل</span>':'—'}</td>
+    <td class="${t.type==='expense'?'c-rd':'c-am'}" style="font-weight:600">−${L(t.amount)} ج</td>
+  </tr>`).join('')||'<tr><td colspan="5" class="empty">لا توجد مصروفات</td></tr>';
+}
+
+// ════════════════════════════
+// INCOME
+// ════════════════════════════
+function updateInFund(){
+  const c=document.getElementById('in-cat').value;
+  document.getElementById('in-q-wrap').style.display=['q_emara','q_asansir','q_both'].includes(c)?'':'none';
+  document.getElementById('in-fund-wrap').style.display=c==='q_both'?'none':'';
+  if(c==='q_emara')document.getElementById('in-fund').value='emara';
+  if(c==='q_asansir')document.getElementById('in-fund').value='asansir';
+}
+function addIncome(){
+  const date=document.getElementById('in-date').value,aptSel=document.getElementById('in-apt').value;
+  const cat=document.getElementById('in-cat').value,quarter=document.getElementById('in-quarter').value;
+  const fund=document.getElementById('in-fund').value,desc=document.getElementById('in-desc').value.trim();
+  const amount=parseFloat(document.getElementById('in-amount').value);
+  if(!date||!desc||!amount||amount<=0){setMsg('in-msg','⚠ أكمل جميع الحقول','var(--rd)');return;}
+  const apt=APTS.find(a=>a.a===aptSel);
+  const base={date,type:'income',apt:aptSel,aptN:apt?apt.n:'',desc,cat,quarter:['q_emara','q_asansir','q_both'].includes(cat)?quarter:''};
+  const arr=load();
+  if(cat==='q_both'){
+    const hE=apt?apt.qt_e:amount/2,hA=apt?apt.qt_a:amount/2;
+    arr.push({...base,id:'u'+Date.now()+'e',fund:'emara',cat:'q_emara',amount:hE,desc:desc+' (عمارة)'});
+    arr.push({...base,id:'u'+Date.now()+'a',fund:'asansir',cat:'q_asansir',amount:hA,desc:desc+' (أسانسير)'});
+    setMsg('in-msg',`✓ عمارة ${L(hE)} ج + أسانسير ${L(hA)} ج`,'var(--gr)');
+  }else{
+    arr.push({...base,id:'u'+Date.now(),fund,amount});
+    setMsg('in-msg','✓ تم التسجيل — '+L(amount)+' ج','var(--gr)');
+  }
+  save(arr);document.getElementById('in-desc').value='';document.getElementById('in-amount').value='';
+  renderIncome();renderAptGrid();
+}
+function renderIncome(){
+  const q=document.getElementById('in-s').value.toLowerCase(),ff=document.getElementById('in-ff').value,fq=document.getElementById('in-fq').value;
+  let txns=load().filter(t=>t.type==='income');
+  if(ff)txns=txns.filter(t=>t.fund===ff);
+  if(fq)txns=txns.filter(t=>t.quarter===fq);
+  if(q)txns=txns.filter(t=>(t.desc+t.apt+t.aptN).toLowerCase().includes(q));
+  txns.sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('in-total').textContent=`${L(txns.reduce((s,t)=>s+t.amount,0))} ج (${txns.length} عملية)`;
+  document.getElementById('in-tbody').innerHTML=txns.map(t=>`<tr class="r-in">
+    <td>${t.date}</td>
+    <td>${t.apt?`<span class="bdg bdg-gy">${t.apt}</span> ${t.aptN}`:t.aptN||'—'}</td>
+    <td>${t.desc}</td>
+    <td><span class="bdg bdg-gy">${CAT_LABELS[t.cat]||t.cat||'—'}</span></td>
+    <td style="color:${t.fund==='emara'?'var(--ac)':'var(--tl)'}">${t.fund==='emara'?'عمارة':'أسانسير'}</td>
+    <td>${t.quarter?`<span class="bdg bdg-ac">${t.quarter}</span>`:'—'}</td>
+    <td class="c-gr" style="font-weight:600">+${L(t.amount)} ج</td>
+    <td>${!t.id.startsWith('s')?`<button class="btn btn-sm btn-rd" onclick="delTxn('${t.id}')">حذف</button>`:'<span style="font-size:10px;color:var(--tx3)">أساسي</span>'}</td>
+  </tr>`).join('')||'<tr><td colspan="8" class="empty">لا توجد إيرادات</td></tr>';
+}
+
+// ════════════════════════════
+// EXPENSE
+// ════════════════════════════
+function toggleTransfer(){
+  const isT=document.getElementById('ex-type').value==='transfer';
+  document.getElementById('ex-to-wr').style.display=isT?'':'none';
+  document.getElementById('ex-cat-wr').style.display=isT?'none':'';
+}
+function addExpense(){
+  const date=document.getElementById('ex-date').value,type=document.getElementById('ex-type').value;
+  const fund=document.getElementById('ex-fund').value,toFund=document.getElementById('ex-tofund').value;
+  const cat=document.getElementById('ex-cat').value,desc=document.getElementById('ex-desc').value.trim();
+  const amount=parseFloat(document.getElementById('ex-amount').value);
+  if(!date||!desc||!amount||amount<=0){setMsg('ex-msg','⚠ أكمل جميع الحقول','var(--rd)');return;}
+  const arr=load();arr.push({id:'u'+Date.now(),date,type,fund,toFund:type==='transfer'?toFund:undefined,amount,desc,cat:type==='expense'?cat:undefined});
+  save(arr);setMsg('ex-msg','✓ تم التسجيل — '+L(amount)+' ج','var(--gr)');
+  document.getElementById('ex-desc').value='';document.getElementById('ex-amount').value='';
+  renderExpenses();
+}
+function renderExpenses(){
+  const q=document.getElementById('ex-s').value.toLowerCase(),ff=document.getElementById('ex-ff').value;
+  let txns=load().filter(t=>t.type==='expense'||t.type==='transfer');
+  if(ff)txns=txns.filter(t=>t.fund===ff);
+  if(q)txns=txns.filter(t=>t.desc.toLowerCase().includes(q));
+  txns.sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('ex-total').textContent=`مصروفات: ${L(txns.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0))} ج`;
+  document.getElementById('ex-tbody').innerHTML=txns.map(t=>`<tr class="${t.type==='transfer'?'r-tr':'r-ex'}">
+    <td>${t.date}</td>
+    <td>${t.desc}${t.type==='transfer'?` ← <span style="color:${t.toFund==='emara'?'var(--ac)':'var(--tl)'}">${t.toFund==='emara'?'عمارة':'أسانسير'}</span>`:''}</td>
+    <td style="color:${t.fund==='emara'?'var(--ac)':'var(--tl)'}">${t.fund==='emara'?'عمارة':'أسانسير'}</td>
+    <td>${t.cat?`<span class="bdg bdg-gy">${t.cat}</span>`:t.type==='transfer'?'<span class="bdg bdg-am">تحويل</span>':'—'}</td>
+    <td class="${t.type==='expense'?'c-rd':'c-am'}" style="font-weight:600">−${L(t.amount)} ج</td>
+    <td>${!t.id.startsWith('s')?`<button class="btn btn-sm btn-rd" onclick="delTxn('${t.id}')">حذف</button>`:'<span style="font-size:10px;color:var(--tx3)">أساسي</span>'}</td>
+  </tr>`).join('')||'<tr><td colspan="6" class="empty">لا توجد مصروفات</td></tr>';
+}
+
+// ════════════════════════════
+// LEDGER
+// ════════════════════════════
+function renderLedger(){
+  const q=document.getElementById('lg-s').value.toLowerCase(),ft=document.getElementById('lg-ft').value,ff=document.getElementById('lg-ff').value;
+  let txns=load();
+  if(ft)txns=txns.filter(t=>t.type===ft);
+  if(ff)txns=txns.filter(t=>t.fund===ff);
+  if(q)txns=txns.filter(t=>(t.desc+t.apt+t.aptN).toLowerCase().includes(q));
+  txns.sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById('lg-cnt').textContent=txns.length+' عملية';
+  document.getElementById('lg-tbody').innerHTML=txns.map(t=>`<tr class="${t.type==='income'?'r-in':t.type==='expense'?'r-ex':'r-tr'}">
+    <td>${t.date}</td><td>${t.desc}</td>
+    <td>${t.apt?`<span class="bdg bdg-gy">${t.apt}</span>`:'—'}</td>
+    <td style="color:${t.fund==='emara'?'var(--ac)':'var(--tl)'}">${t.fund==='emara'?'عمارة':'أسانسير'}</td>
+    <td>${t.type==='income'?'<span class="bdg bdg-gr">إيراد</span>':t.type==='expense'?'<span class="bdg bdg-rd">مصروف</span>':'<span class="bdg bdg-am">تحويل</span>'}</td>
+    <td>${(t.cat&&CAT_LABELS[t.cat])?`<span class="bdg bdg-gy">${CAT_LABELS[t.cat]}</span>`:t.cat?`<span class="bdg bdg-gy">${t.cat}</span>`:'—'}</td>
+    <td>${t.quarter?`<span class="bdg bdg-ac">${t.quarter}</span>`:'—'}</td>
+    <td class="c-gr">${t.type==='income'?'+'+L(t.amount)+' ج':''}</td>
+    <td class="${t.type==='expense'?'c-rd':'c-am'}">${t.type!=='income'?'−'+L(t.amount)+' ج':''}</td>
+  </tr>`).join('')||'<tr><td colspan="9" class="empty">لا توجد عمليات</td></tr>';
+}
+
+// ════════════════════════════
+// CHARGES
+// ════════════════════════════
+function getFloorsSel(){
+  const sel=document.getElementById('ch-floors');
+  const vals=[...sel.selectedOptions].map(o=>o.value);
+  return vals.includes('all')?'all':vals;
+}
+function previewCharge(){
+  const mq=parseFloat(document.getElementById('ch-mq').value)||0;
+  const gm=parseFloat(document.getElementById('ch-gm').value)||0;
+  const floors=getFloorsSel();
+  const matched=APTS.filter(a=>floors==='all'||floors.includes(a.f));
+  const total=matched.reduce((s,a)=>s+(a.s==='مقيم'?mq:gm),0);
+  document.getElementById('ch-preview').innerHTML=`سيُطبَّق على <strong>${matched.length}</strong> شقة | مقيم: <strong class="c-ac">${mq} ج</strong> | غير مقيم: <strong class="c-tl">${gm} ج</strong> | إجمالي: <strong class="c-am">${L(total)} ج</strong>`;
+}
+function addCharge(){
+  const name=document.getElementById('ch-name').value.trim();
+  const date=document.getElementById('ch-date').value;
+  const fund=document.getElementById('ch-fund').value;
+  const mq=parseFloat(document.getElementById('ch-mq').value)||0;
+  const gm=parseFloat(document.getElementById('ch-gm').value)||0;
+  const floors=getFloorsSel();
+  if(!name||!date||(mq===0&&gm===0)){setMsg('ch-msg','⚠ أكمل اسم البند والتاريخ والمبلغ','var(--rd)');return;}
+  const charge={id:'ch'+Date.now(),date,name,fund,amt_mq:mq,amt_gm:gm,floors};
+  const arr=loadCharges();arr.push(charge);saveCharges(arr);
+  setMsg('ch-msg',`✓ تمت إضافة "${name}" لـ ${APTS.filter(a=>aptMatchesCharge(a,charge)).length} شقة`,'var(--gr)');
+  document.getElementById('ch-name').value='';
+  renderCharges();renderAptGrid();
+}
+function renderCharges(){
+  const charges=loadCharges(),txns=load();
+  const el=document.getElementById('ch-list');
+  if(!charges.length){el.innerHTML='<div class="empty">لا توجد بنود مسجلة</div>';return;}
+  el.innerHTML=charges.map(ch=>{
+    const matched=APTS.filter(a=>aptMatchesCharge(a,ch));
+    const paidC=matched.filter(a=>chargePaid(txns,a.a,ch.id)>=chargeAmt(a,ch)).length;
+    const tDue=matched.reduce((s,a)=>s+chargeAmt(a,ch),0);
+    const tPaid=matched.reduce((s,a)=>s+chargePaid(txns,a.a,ch.id),0);
+    const pct=tDue>0?Math.round(tPaid/tDue*100):0;
+    return`<div style="background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="font-size:14px;font-weight:600">${ch.name}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">${ch.date} | ${ch.fund==='emara'?'عمارة':'أسانسير'} | مقيم: ${ch.amt_mq} ج | غير مقيم: ${ch.amt_gm} ج | ${ch.floors==='all'?'كل الأدوار':ch.floors.join(', ')}</div>
+        </div>
+        <button class="btn btn-sm btn-rd" data-id="${ch.id}" onclick="deleteCharge(this.dataset.id)">حذف</button>
+      </div>
+      <div style="display:flex;gap:16px;font-size:12px;flex-wrap:wrap">
+        <span>شقق مشمولة: <strong>${matched.length}</strong></span>
+        <span>دفعوا: <strong class="c-gr">${paidC}</strong></span>
+        <span>لم يدفعوا: <strong class="c-rd">${matched.length-paidC}</strong></span>
+        <span>محصّل: <strong class="c-gr">${L(tPaid)}</strong> من ${L(tDue)} ج</span>
+      </div>
+      <div class="prog" style="margin-top:8px"><div class="pf" style="width:${pct}%;background:var(--gr)"></div></div>
+    </div>`;
+  }).join('');
+}
+function deleteCharge(id){
+  if(!confirm('هل تريد حذف هذا البند؟'))return;
+  saveCharges(loadCharges().filter(c=>c.id!==id));
+  renderCharges();renderAptGrid();
+}
+
+// ════════════════════════════
+// EXCEL
+// ════════════════════════════
+function downloadTemplate(type){
+  if(type==='income'){
+    const ws=XLSX.utils.aoa_to_sheet([
+      ['التاريخ','رقم الشقة','الصندوق','النوع','الربع','المبلغ','البيان'],
+      ['2026-04-01','205','emara','q_emara','Q2','300','عمارة Q2'],
+      ['# الصندوق: emara أو asansir'],
+      ['# النوع: q_emara / q_asansir / sawaid / old_payment / water_meter / other'],
+      ['# الربع: Q1 / Q2 / Q3 / Q4'],
+    ]);
+    ws['!cols']=[{wch:12},{wch:10},{wch:10},{wch:14},{wch:6},{wch:10},{wch:24}];
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'إيرادات');XLSX.writeFile(wb,'قالب_الإيرادات.xlsx');
+  }else{
+    const ws=XLSX.utils.aoa_to_sheet([
+      ['التاريخ','الصندوق','التصنيف','المبلغ','البيان'],
+      ['2026-04-01','emara','نظافة','150','نظافة السلم — أبريل'],
+      ['# الصندوق: emara أو asansir'],
+      ['# التصنيف: نظافة / صيانة / كهرباء / أمن / إدارة / أخرى'],
+    ]);
+    ws['!cols']=[{wch:12},{wch:10},{wch:10},{wch:10},{wch:28}];
+    const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'مصروفات');XLSX.writeFile(wb,'قالب_المصروفات.xlsx');
+  }
+}
+function previewUpload(){
+  const file=document.getElementById('up-file').files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).filter(r=>r[0]&&!String(r[0]).startsWith('#'));
+    const type=document.getElementById('up-type').value;
+    let valid=[],errors=[];
+    rows.slice(1).forEach((r,i)=>{
+      if(type==='income'){
+        const [date,apt,fund,cat,quarter,amount,desc]=r;
+        if(!date||!fund||!amount){errors.push(`صف ${i+2}: بيانات ناقصة`);return;}
+        if(!['emara','asansir'].includes(fund)){errors.push(`صف ${i+2}: صندوق غير صحيح`);return;}
+        const aptObj=APTS.find(a=>a.a===String(apt).padStart(3,'0')||a.a===String(apt));
+        valid.push({id:'up'+Date.now()+i,date:String(date),type:'income',fund,apt:aptObj?aptObj.a:String(apt),aptN:aptObj?aptObj.n:'',cat:cat||'other',quarter:quarter||'',amount:parseFloat(amount),desc:desc||cat});
+      }else{
+        const [date,fund,cat,amount,desc]=r;
+        if(!date||!fund||!amount){errors.push(`صف ${i+2}: بيانات ناقصة`);return;}
+        valid.push({id:'up'+Date.now()+i,date:String(date),type:'expense',fund,cat:cat||'أخرى',amount:parseFloat(amount),desc:desc||''});
+      }
+    });
+    window._pendingUpload=valid;
+    document.getElementById('up-preview').innerHTML=`
+      <div class="notice ${valid.length?'ok':''}" style="margin-bottom:10px">✓ <strong>${valid.length}</strong> صف صالح${errors.length?` | <span class="c-rd">${errors.length} أخطاء</span>`:''}</div>
+      ${errors.length?`<div style="font-size:12px;color:var(--rd);margin-bottom:10px">${errors.join('<br>')}</div>`:''}
+      <div class="tw"><table><thead><tr><th>التاريخ</th><th>الشقة</th><th>البيان</th><th>الصندوق</th><th>المبلغ</th></tr></thead>
+      <tbody>${valid.slice(0,6).map(t=>`<tr><td>${t.date}</td><td>${t.apt||'—'}</td><td>${t.desc}</td><td>${t.fund==='emara'?'عمارة':'أسانسير'}</td><td class="${t.type==='income'?'c-gr':'c-rd'}">${t.type==='income'?'+':'−'}${L(t.amount)} ج</td></tr>`).join('')}${valid.length>6?`<tr><td colspan="5" style="text-align:center;color:var(--tx3);font-size:11px">... و ${valid.length-6} صف آخر</td></tr>`:''}</tbody></table></div>
+      ${valid.length?`<button class="btn btn-gr" style="margin-top:12px" onclick="confirmUpload()">✓ استيراد ${valid.length} عملية</button>`:''}`;
+  };
+  reader.readAsArrayBuffer(file);
+}
+function confirmUpload(){
+  if(!window._pendingUpload?.length)return;
+  const arr=load();arr.push(...window._pendingUpload);save(arr);
+  setMsg('up-msg',`✓ تم استيراد ${window._pendingUpload.length} عملية`,'var(--gr)');
+  window._pendingUpload=[];
+  document.getElementById('up-preview').innerHTML='';
+  document.getElementById('up-file').value='';
+  renderAptGrid();
+}
+function exportExcel(mode){
+  const txns=load();let data=[],sheetName='';
+  const h=['التاريخ','الشقة','اسم المالك','البيان','الصندوق','النوع','الفئة','الربع','المبلغ'];
+  if(mode==='income'){data=txns.filter(t=>t.type==='income').map(t=>[t.date,t.apt||'',t.aptN||'',t.desc,t.fund==='emara'?'العمارة':'الأسانسير','إيراد',CAT_LABELS[t.cat]||t.cat||'',t.quarter||'',t.amount]);sheetName='الإيرادات';}
+  else if(mode==='expense'){data=txns.filter(t=>t.type!=='income').map(t=>[t.date,'','',t.desc,t.fund==='emara'?'العمارة':'الأسانسير',t.type==='expense'?'مصروف':'تحويل',t.cat||'','',t.amount]);sheetName='المصروفات';}
+  else{data=txns.map(t=>[t.date,t.apt||'',t.aptN||'',t.desc,t.fund==='emara'?'العمارة':'الأسانسير',t.type==='income'?'إيراد':t.type==='expense'?'مصروف':'تحويل',t.cat||'',t.quarter||'',t.amount]);sheetName='دفتر الحسابات';}
+  const ws=XLSX.utils.aoa_to_sheet([h,...data]);
+  ws['!cols']=[{wch:12},{wch:6},{wch:20},{wch:28},{wch:10},{wch:8},{wch:14},{wch:6},{wch:10}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheetName);
+  if(mode==='all'){
+    const ah=['الشقة','المالك','الدور','الحالة','مستحقات سابقة','عمارة Q1','عمارة Q2','أسانسير Q1','أسانسير Q2','إجمالي مدفوع','المطلوب','الصافي'];
+    const ad=APTS.map(a=>{
+      const pe1=aptPaidQ(txns,a.a,'q_emara','Q1'),pe2=aptPaidQ(txns,a.a,'q_emara','Q2');
+      const pa1=aptPaidQ(txns,a.a,'q_asansir','Q1'),pa2=aptPaidQ(txns,a.a,'q_asansir','Q2');
+      const paid=pe1+pe2+pa1+pa2,due=(a.qt_e+a.qt_a)*2;
+      return[a.a,a.n,a.f,a.s,Object.values(a.od).reduce((s,v)=>s+v,0),pe1,pe2,pa1,pa2,paid,due,paid-due];
+    });
+    const ws2=XLSX.utils.aoa_to_sheet([ah,...ad]);
+    ws2['!cols']=[{wch:6},{wch:22},{wch:8},{wch:10},{wch:12},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:10},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws2,'ملخص الشقق');
+  }
+  XLSX.writeFile(wb,`صندوق_العمارة_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+// ════════════════════════════
+// UTILS
+// ════════════════════════════
+function delTxn(id){
+  if(!confirm('حذف هذه العملية؟'))return;
+  save(load().filter(t=>t.id!==id));
+  renderIncome();renderExpenses();renderLedger();renderAptGrid();
+}
+function setMsg(id,msg,color){const el=document.getElementById(id);if(el){el.textContent=msg;el.style.color=color;}}
+
+// ════════════════════════════
+// APT DATA MANAGEMENT
+// ════════════════════════════
+function renderAptData(){
+  const q=document.getElementById('ad-s').value.toLowerCase();
+  const fl=document.getElementById('ad-fl').value;
+  let apts=APTS.filter(a=>(!fl||a.f===fl)&&(!q||a.n.includes(q)||a.a.includes(q)));
+  document.getElementById('ad-tbody').innerHTML=apts.map((a,_)=>`<tr id="row-${a.a}">
+    <td><strong>${a.a}</strong></td>
+    <td><input class="fc" value="${a.n}" style="min-width:160px;padding:5px 8px;font-size:12px" onchange="updateApt('${a.a}','n',this.value)"></td>
+    <td>
+      <select class="fc" style="padding:5px 8px;font-size:12px" onchange="updateApt('${a.a}','f',this.value)">
+        ${['أرضي','أول','ثاني','ثالث','رابع','خامس'].map(f=>`<option ${a.f===f?'selected':''}>${f}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <select class="fc" style="padding:5px 8px;font-size:12px" onchange="updateApt('${a.a}','s',this.value)">
+        <option ${a.s==='مقيم'?'selected':''}>مقيم</option>
+        <option ${a.s==='غير مقيم'?'selected':''}>غير مقيم</option>
+      </select>
+    </td>
+    <td><input class="fc" type="number" value="${a.qt_e}" style="width:80px;padding:5px 8px;font-size:12px" onchange="updateApt('${a.a}','qt_e',+this.value)"></td>
+    <td><input class="fc" type="number" value="${a.qt_a}" style="width:80px;padding:5px 8px;font-size:12px" onchange="updateApt('${a.a}','qt_a',+this.value)"></td>
+    <td><button class="btn btn-sm btn-rd" data-apt="${a.a}" onclick="deleteApt(this.dataset.apt)">حذف</button></td>
+  </tr>`).join('')||'<tr><td colspan="7" class="empty">لا توجد شقق</td></tr>';
+}
+function updateApt(aptNum,field,val){
+  const idx=APTS.findIndex(a=>a.a===aptNum);
+  if(idx<0)return;
+  APTS[idx][field]=val;
+  saveAptsCustom(APTS);
+  renderAptGrid();
+}
+function deleteApt(aptNum){
+  if(!confirm(`هل تريد حذف شقة ${aptNum} من النظام؟`))return;
+  APTS=APTS.filter(a=>a.a!==aptNum);
+  saveAptsCustom(APTS);
+  renderAptData();renderAptGrid();
+}
+function addNewApt(){
+  const num=document.getElementById('na-num').value.trim().padStart(3,'0');
+  const name=document.getElementById('na-name').value.trim();
+  const floor=document.getElementById('na-floor').value;
+  const status=document.getElementById('na-status').value;
+  const qe=parseFloat(document.getElementById('na-qe').value)||0;
+  const qa=parseFloat(document.getElementById('na-qa').value)||0;
+  if(!num||!name){setMsg('na-msg','⚠ أدخل رقم وaسم الشقة','var(--rd)');return;}
+  if(APTS.find(a=>a.a===num)){setMsg('na-msg','⚠ رقم الشقة موجود بالفعل','var(--rd)');return;}
+  APTS.push({a:num,n:name,f:floor,s:status,qt_e:qe,qt_a:qa,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}});
+  APTS.sort((a,b)=>a.a.localeCompare(b.a));
+  saveAptsCustom(APTS);
+  renderAptData();renderAptGrid();
+  document.getElementById('na-num').value='';document.getElementById('na-name').value='';
+  setMsg('na-msg','✓ تمت إضافة شقة '+num,'var(--gr)');
+}
+
+
+function setup(){
+  initData();
+  const today=new Date().toISOString().split('T')[0];
+  ['in-date','ex-date','ch-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
+  ['in-apt'].forEach(selId=>{
+    const sel=document.getElementById(selId);
+    ['أرضي','أول','ثاني','ثالث','رابع'].forEach(fl=>{
+      const og=document.createElement('optgroup');og.label='── الدور '+fl+' ──';
+      APTS.filter(a=>a.f===fl).forEach(a=>{const o=document.createElement('option');o.value=a.a;o.textContent=a.a+' — '+a.n;og.appendChild(o);});
+      sel.appendChild(og);
+    });
+  });
+  updateInFund();
+  renderAptGrid();
+  setInterval(()=>{document.getElementById('clk').textContent=new Date().toLocaleDateString('ar-EG',{day:'numeric',month:'short'})+' '+new Date().toLocaleTimeString('ar-EG');},1000);
+}
+setup();
+</script>
+</body>
+</html>
