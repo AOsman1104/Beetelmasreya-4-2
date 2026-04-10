@@ -149,11 +149,13 @@ select.fc option{background:var(--bg2)}
     <button class="nb admin-tab" id="tab-charges" style="display:none" onclick="go('charges')">بنود جماعية <span class="adm-badge">إدارة</span></button>
     <button class="nb admin-tab" id="tab-upload" style="display:none" onclick="go('upload')">رفع بيانات <span class="adm-badge">إدارة</span></button>
     <button class="nb admin-tab" id="tab-aptdata" style="display:none" onclick="go('aptdata')">بيانات الشقق <span class="adm-badge">إدارة</span></button>
+    <button class="nb admin-tab" id="tab-gsheets" style="display:none" onclick="go('gsheets')">Google Sheets <span class="adm-badge">إدارة</span></button>
   </div>
   <div class="hdr-brand">
     <span class="clk" id="clk"></span>
     <button class="lock-btn" id="lockBtn" onclick="toggleLock()">🔒 إدارة</button>
     <button class="btn btn-sm btn-rd" id="resetBtn" style="display:none" onclick="resetToSeed()">↺ إعادة تهيئة</button>
+    <button class="btn btn-sm btn-am" id="backupBtn" style="display:none" onclick="backupToExcel()">⬇ نسخة احتياطية</button>
   </div>
 </div>
 
@@ -232,8 +234,13 @@ select.fc option{background:var(--bg2)}
           <option value="other">أخرى</option>
         </select>
       </div>
-      <div class="fg" id="in-q-wrap"><label>الربع</label>
-        <select class="fc" id="in-quarter"><option value="Q1">Q1 — يناير–مارس</option><option value="Q2">Q2 — أبريل–يونيو</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
+      <div class="fg" id="in-q-wrap"><label>الشهر</label>
+        <select class="fc" id="in-quarter">
+          <option value="يناير">يناير</option><option value="فبراير">فبراير</option><option value="مارس">مارس</option>
+          <option value="أبريل">أبريل</option><option value="مايو">مايو</option><option value="يونيو">يونيو</option>
+          <option value="يوليو">يوليو</option><option value="أغسطس">أغسطس</option><option value="سبتمبر">سبتمبر</option>
+          <option value="أكتوبر">أكتوبر</option><option value="نوفمبر">نوفمبر</option><option value="ديسمبر">ديسمبر</option>
+        </select>
       </div>
       <div class="fg" id="in-fund-wrap"><label>الصندوق</label>
         <select class="fc" id="in-fund"><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
@@ -251,7 +258,7 @@ select.fc option{background:var(--bg2)}
     <div class="search-r">
       <input class="fc" type="text" id="in-s" placeholder="بحث..." oninput="renderIncome()" style="max-width:200px">
       <select class="fc" id="in-ff" onchange="renderIncome()" style="max-width:150px"><option value="">كل الصناديق</option><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
-      <select class="fc" id="in-fq" onchange="renderIncome()" style="max-width:130px"><option value="">كل الأرباع</option><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select>
+      <select class="fc" id="in-fq" onchange="renderIncome()" style="max-width:130px"><option value="">كل الشهور</option><option>يناير</option><option>فبراير</option><option>مارس</option><option>أبريل</option><option>مايو</option><option>يونيو</option><option>يوليو</option><option>أغسطس</option><option>سبتمبر</option><option>أكتوبر</option><option>نوفمبر</option><option>ديسمبر</option></select>
       <button class="btn btn-am btn-sm" onclick="exportExcel('income')" style="margin-right:auto">⬇ Excel</button>
     </div>
     <div class="tw"><table><thead><tr><th>التاريخ</th><th>الشقة</th><th>البيان</th><th>النوع</th><th>الصندوق</th><th>الربع</th><th>المبلغ</th><th></th></tr></thead>
@@ -331,10 +338,19 @@ select.fc option{background:var(--bg2)}
       <div class="fg"><label>المبلغ للمقيم (ج.م)</label><input class="fc" type="number" id="ch-mq" placeholder="250" min="0" oninput="previewCharge()"></div>
       <div class="fg"><label>المبلغ لغير المقيم (ج.م)</label><input class="fc" type="number" id="ch-gm" placeholder="250" min="0" oninput="previewCharge()"></div>
       <div class="fg"><label>الأدوار المشمولة</label>
-        <select class="fc" id="ch-floors" multiple style="height:80px" onchange="previewCharge()">
-          <option value="all" selected>الكل</option>
-          <option value="أرضي">أرضي</option><option value="أول">أول</option>
-          <option value="ثاني">ثاني</option><option value="ثالث">ثالث</option><option value="رابع">رابع</option>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="ch-floors-wrap">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" value="أرضي" class="ch-fl-cb" onchange="previewCharge()"> أرضي</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" value="أول" class="ch-fl-cb" onchange="previewCharge()"> أول</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" value="ثاني" class="ch-fl-cb" onchange="previewCharge()"> ثاني</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" value="ثالث" class="ch-fl-cb" onchange="previewCharge()"> ثالث</label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer"><input type="checkbox" value="رابع" class="ch-fl-cb" onchange="previewCharge()"> رابع</label>
+          <button class="btn btn-sm btn-gy" type="button" onclick="toggleAllFloors()" style="font-size:11px;padding:2px 8px">الكل</button>
+        </div>
+      </div>
+      <div class="fg"><label>نوع الدفع</label>
+        <select class="fc" id="ch-pay-type" onchange="previewCharge()">
+          <option value="one_time">مرة واحدة فقط</option>
+          <option value="monthly">شهري متكرر</option>
         </select>
       </div>
     </div>
@@ -350,6 +366,14 @@ select.fc option{background:var(--bg2)}
 
 <!-- ══════ UPLOAD ══════ -->
 <div class="pg" id="pg-upload">
+  <div class="card" style="background:var(--am-bg);border-color:var(--am-bd)">
+    <div class="ct am">احتياطي البيانات — مهم جداً</div>
+    <p style="font-size:13px;color:var(--tx2);margin-bottom:14px">قبل أي تحديث للملف: احفظ نسخة احتياطية من البيانات. بعد رفع الملف الجديد: استعدها مرة ثانية.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-gr" onclick="backupToExcel()" style="font-size:14px;padding:10px 22px">⬇ تحميل نسخة احتياطية كاملة</button>
+      <button class="btn btn-pr" onclick="restoreFromExcel()" style="font-size:14px;padding:10px 22px">⬆ استعادة من نسخة احتياطية</button>
+    </div>
+  </div>
   <div class="card">
     <div class="ct am">تحميل قوالب Excel</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -419,96 +443,227 @@ select.fc option{background:var(--bg2)}
   </div>
 </div>
 
+<!-- ══════ GOOGLE SHEETS ══════ -->
+<div class="pg" id="pg-gsheets">
+  <div class="card" style="background:var(--gr-bg);border-color:var(--gr-bd)">
+    <div class="ct" style="color:var(--gr)">ربط Google Sheets كقاعدة بيانات</div>
+    <p style="font-size:13px;color:var(--tx2);margin-bottom:16px">اتبع الخطوات دي مرة واحدة بس — بعدها البيانات بتتحفظ على الشيت وتتزامن من أي جهاز.</p>
+    <div style="display:flex;gap:12px;margin-bottom:14px;align-items:flex-start">
+      <div style="min-width:28px;height:28px;border-radius:50%;background:var(--gr);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">1</div>
+      <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">افتح Google Apps Script</div>
+      <div style="font-size:12px;color:var(--tx2)">روح على <a href="https://script.google.com" target="_blank" style="color:var(--ac)">script.google.com</a> ← New Project ← احذف الكود الموجود</div></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:14px;align-items:flex-start">
+      <div style="min-width:28px;height:28px;border-radius:50%;background:var(--gr);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">2</div>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px;margin-bottom:6px">الصق الكود ده</div>
+      <div style="position:relative">
+        <textarea id="gs-code" readonly style="width:100%;height:180px;font-family:monospace;font-size:11px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:10px;color:var(--tx);resize:none" onclick="this.select()"></textarea>
+        <button class="btn btn-sm btn-gy" style="position:absolute;top:6px;left:6px;font-size:11px" onclick="navigator.clipboard.writeText(document.getElementById('gs-code').value);setMsg('gs-msg','✓ تم النسخ','var(--gr)')">نسخ الكود</button>
+      </div></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:14px;align-items:flex-start">
+      <div style="min-width:28px;height:28px;border-radius:50%;background:var(--gr);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">3</div>
+      <div><div style="font-weight:600;font-size:13px;margin-bottom:4px">انشره كـ Web App</div>
+      <div style="font-size:12px;color:var(--tx2)"><strong>Deploy</strong> → New Deployment → Web App → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong> → Deploy → انسخ الـ URL</div></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="min-width:28px;height:28px;border-radius:50%;background:var(--gr);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">4</div>
+      <div style="flex:1"><div style="font-weight:600;font-size:13px;margin-bottom:6px">الصق الـ URL</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="fc" type="text" id="gs-url" placeholder="https://script.google.com/macros/s/AKfyc..." style="flex:1;min-width:200px;font-size:12px">
+        <button class="btn btn-gr" onclick="saveGSUrl()">حفظ</button>
+        <button class="btn btn-gy" onclick="testGSConnection()">اختبار الاتصال</button>
+      </div>
+      <div id="gs-msg" style="font-size:12px;min-height:18px;margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="gs-sync-card">
+    <div class="ct am">مزامنة البيانات</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="background:var(--gr-bg);border:1px solid var(--gr-bd);border-radius:var(--r);padding:14px">
+        <div style="font-size:13px;font-weight:600;color:var(--gr);margin-bottom:4px">⬆ رفع للشيت</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">رفع كل البيانات الحالية على Google Sheets</div>
+        <button class="btn btn-gr" onclick="pushToSheets()">رفع البيانات الآن</button>
+      </div>
+      <div style="background:var(--ac-bg);border:1px solid #bfdbfe;border-radius:var(--r);padding:14px">
+        <div style="font-size:13px;font-weight:600;color:var(--ac);margin-bottom:4px">⬇ تحميل من الشيت</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">تحميل آخر بيانات من Google Sheets</div>
+        <button class="btn btn-pr" onclick="pullFromSheets()">تحميل البيانات</button>
+      </div>
+    </div>
+    <div id="gs-sync-msg" style="font-size:12px;min-height:18px"></div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════
 // DATA
 // ════════════════════════════════════════
 const APTS_DEFAULT=[
-  {a:"001",n:"أ / أمل",f:"أرضي",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
-  {a:"002",n:"ك / طارق",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"003",n:"أ / أحمد عزازى",f:"أرضي",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
-  {a:"004",n:"أ / محمد زناتى",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"005",n:"م / سعد",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:400,a25:0,m26:300}},
-  {a:"006",n:"أ / عادل",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:900,a25:0,m26:300}},
-  {a:"007",n:"أ / أحمد",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:1200,a25:0,m26:300}},
-  {a:"008",n:"أ / محمد",f:"أرضي",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:1200,a25:0,m26:300}},
-  {a:"101",n:"أ / محمد مشير",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:450,a25:0,m26:150}},
-  {a:"102",n:"أ / عمرو",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:0,e25:300,a25:0,m26:150}},
-  {a:"103",n:"أ / أحمد عزازى",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
-  {a:"104",n:"أ / مصطفى باسم",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:0,asnr:0,water:400,e25:300,a25:0,m26:150}},
-  {a:"105",n:"أ / أحمد شريف",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
-  {a:"106",n:"م / زيزى",f:"أول",s:"مقيم",qt_e:300,qt_a:0,od:{sawaid:250,asnr:0,water:0,e25:600,a25:0,m26:300}},
-  {a:"107",n:"أ / سيد فؤاد",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"108",n:"أ / عمر",f:"أول",s:"غير مقيم",qt_e:150,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"201",n:"أ / محمد خالد",f:"ثاني",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:500,water:0,e25:300,a25:300,m26:600}},
-  {a:"202",n:"أ / علاء",f:"ثاني",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
-  {a:"203",n:"أ / مصطفى",f:"ثاني",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:500,water:400,e25:450,a25:600,m26:300}},
-  {a:"204",n:"م / نشوى",f:"ثاني",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"205",n:"أ / أحمد عثمان",f:"ثاني",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:300,a25:0,m26:0}},
-  {a:"206",n:"أ / نهاد",f:"ثاني",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"207",n:"أ / نهاد",f:"ثاني",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"208",n:"أ / محمود",f:"ثاني",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"301",n:"م / ياسر",f:"ثالث",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"302",n:"أ / ايمن",f:"ثالث",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:600}},
-  {a:"303",n:"أ / أسامة",f:"ثالث",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:500,water:0,e25:50,a25:150,m26:300}},
-  {a:"304",n:"أ / خالد",f:"ثالث",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"305",n:"أ / أحمد",f:"ثالث",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:0,e25:600,a25:600,m26:300}},
-  {a:"306",n:"أ / دينا",f:"ثالث",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
-  {a:"307",n:"م / اسر البهنساوى",f:"ثالث",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"308",n:"أ / بسام",f:"ثالث",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
-  {a:"401",n:"م / مها",f:"رابع",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:-1800}},
-  {a:"402",n:"أ / ابراهيم",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:500,water:0,e25:300,a25:300,m26:300}},
-  {a:"403",n:"أ / محمد عبد الغفار",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:0,e25:600,a25:600,m26:300}},
-  {a:"404",n:"أ / محمد زكى",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:0,e25:150,a25:600,m26:300}},
-  {a:"405",n:"أ / كريم",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:0,asnr:500,water:0,e25:450,a25:450,m26:300}},
-  {a:"406",n:"م / مصطفى",f:"رابع",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:250,asnr:0,water:0,e25:450,a25:450,m26:600}},
-  {a:"407",n:"م / هيام",f:"رابع",s:"غير مقيم",qt_e:150,qt_a:150,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
-  {a:"408",n:"أ / أحمد عساف",f:"رابع",s:"مقيم",qt_e:300,qt_a:300,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"001",n:"أ / أمل",f:"أرضي",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
+  {a:"002",n:"ك / طارق",f:"أرضي",s:"مقيم",qt_e:100,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"003",n:"أ / أحمد عزازى",f:"أرضي",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
+  {a:"004",n:"أ / محمد زناتى",f:"أرضي",s:"مقيم",qt_e:100,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"005",n:"م / سعد",f:"أرضي",s:"مقيم",qt_e:100,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:400,a25:0,m26:300}},
+  {a:"006",n:"أ / عادل",f:"أرضي",s:"مقيم",qt_e:100,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:900,a25:0,m26:300}},
+  {a:"007",n:"أ / أحمد",f:"أرضي",s:"مقيم",qt_e:100,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:1200,a25:0,m26:300}},
+  {a:"008",n:"أ / محمد",f:"أرضي",s:"مقيم",qt_e:100,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:1200,a25:0,m26:300}},
+  {a:"101",n:"أ / محمد مشير",f:"أول",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:450,a25:0,m26:150}},
+  {a:"102",n:"أ / عمرو",f:"أول",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:250,asnr:0,water:0,e25:300,a25:0,m26:150}},
+  {a:"103",n:"أ / أحمد عزازى",f:"أول",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
+  {a:"104",n:"أ / مصطفى باسم",f:"أول",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:0,asnr:0,water:400,e25:300,a25:0,m26:150}},
+  {a:"105",n:"أ / أحمد شريف",f:"أول",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:250,asnr:0,water:400,e25:600,a25:0,m26:150}},
+  {a:"106",n:"م / زيزى",f:"أول",s:"مقيم",qt_e:100,qt_a:0,od:{sawaid:250,asnr:0,water:0,e25:600,a25:0,m26:300}},
+  {a:"107",n:"أ / سيد فؤاد",f:"أول",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"108",n:"أ / عمر",f:"أول",s:"غير مقيم",qt_e:50,qt_a:0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"201",n:"أ / محمد خالد",f:"ثاني",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:500,water:0,e25:300,a25:300,m26:600}},
+  {a:"202",n:"أ / علاء",f:"ثاني",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
+  {a:"203",n:"أ / مصطفى",f:"ثاني",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:0,asnr:500,water:400,e25:450,a25:600,m26:300}},
+  {a:"204",n:"م / نشوى",f:"ثاني",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"205",n:"أ / أحمد عثمان",f:"ثاني",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:0,water:0,e25:300,a25:0,m26:0}},
+  {a:"206",n:"أ / نهاد",f:"ثاني",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"207",n:"أ / نهاد",f:"ثاني",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"208",n:"أ / محمود",f:"ثاني",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"301",n:"م / ياسر",f:"ثالث",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"302",n:"أ / ايمن",f:"ثالث",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:600}},
+  {a:"303",n:"أ / أسامة",f:"ثالث",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:0,asnr:500,water:0,e25:50,a25:150,m26:300}},
+  {a:"304",n:"أ / خالد",f:"ثالث",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"305",n:"أ / أحمد",f:"ثالث",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:250,asnr:500,water:0,e25:600,a25:600,m26:300}},
+  {a:"306",n:"أ / دينا",f:"ثالث",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
+  {a:"307",n:"م / اسر البهنساوى",f:"ثالث",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"308",n:"أ / بسام",f:"ثالث",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
+  {a:"401",n:"م / مها",f:"رابع",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:-1800}},
+  {a:"402",n:"أ / ابراهيم",f:"رابع",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:0,asnr:500,water:0,e25:300,a25:300,m26:300}},
+  {a:"403",n:"أ / محمد عبد الغفار",f:"رابع",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:250,asnr:500,water:0,e25:600,a25:600,m26:300}},
+  {a:"404",n:"أ / محمد زكى",f:"رابع",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:250,asnr:500,water:0,e25:150,a25:600,m26:300}},
+  {a:"405",n:"أ / كريم",f:"رابع",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:0,asnr:500,water:0,e25:450,a25:450,m26:300}},
+  {a:"406",n:"م / مصطفى",f:"رابع",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:250,asnr:0,water:0,e25:450,a25:450,m26:600}},
+  {a:"407",n:"م / هيام",f:"رابع",s:"غير مقيم",qt_e:50,qt_a:50,od:{sawaid:250,asnr:500,water:400,e25:600,a25:600,m26:300}},
+  {a:"408",n:"أ / أحمد عساف",f:"رابع",s:"مقيم",qt_e:100,qt_a:100,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}},
 ];
 
 const CAT_LABELS={'q_emara':'عمارة ربع سنوي','q_asansir':'أسانسير ربع سنوي','sawaid':'صواعد','old_payment':'دين قديم','water_meter':'عداد مياه','return':'مرتد','other':'أخرى','opening':'رصيد أول المدة'};
 
 const SEED=[
   {id:'s0',date:'2026-01-01',type:'income',fund:'emara',apt:'',aptN:'',amount:4040,desc:'رصيد أول المدة',cat:'opening',quarter:''},
-  {id:'se02',date:'2026-03-31',type:'income',fund:'emara',apt:'002',aptN:'ك / طارق',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se04a',date:'2026-03-31',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se04b',date:'2026-04-30',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
-  {id:'se107',date:'2026-03-31',type:'income',fund:'emara',apt:'107',aptN:'أ / سيد فؤاد',amount:150,desc:'عمارة Q1 جزئي',cat:'q_emara',quarter:'Q1'},
-  {id:'se108',date:'2026-03-31',type:'income',fund:'emara',apt:'108',aptN:'أ / عمر',amount:300,desc:'عمارة Q1 + رصيد مقدم',cat:'q_emara',quarter:'Q1'},
-  {id:'se204e',date:'2026-03-31',type:'income',fund:'emara',apt:'204',aptN:'م / نشوى',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se205ea',date:'2026-03-31',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se205eb',date:'2026-04-30',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
-  {id:'se206e',date:'2026-03-31',type:'income',fund:'emara',apt:'206',aptN:'أ / نهاد',amount:75,desc:'عمارة Q1 جزئي',cat:'q_emara',quarter:'Q1'},
-  {id:'se207e',date:'2026-03-31',type:'income',fund:'emara',apt:'207',aptN:'أ / نهاد',amount:75,desc:'عمارة Q1 جزئي',cat:'q_emara',quarter:'Q1'},
-  {id:'se208e',date:'2026-03-31',type:'income',fund:'emara',apt:'208',aptN:'أ / محمود',amount:150,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se301ea',date:'2026-03-31',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se301eb',date:'2026-04-30',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
-  {id:'se304e',date:'2026-03-31',type:'income',fund:'emara',apt:'304',aptN:'أ / خالد',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se307e',date:'2026-03-31',type:'income',fund:'emara',apt:'307',aptN:'م / اسر البهنساوى',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se308ea',date:'2026-03-31',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se308eb',date:'2026-04-30',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
-  {id:'se401ea',date:'2026-03-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'se401eb',date:'2026-06-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:300,desc:'عمارة Q2',cat:'q_emara',quarter:'Q2'},
-  {id:'se401ec',date:'2026-09-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:300,desc:'عمارة Q3',cat:'q_emara',quarter:'Q3'},
-  {id:'se401ed',date:'2026-12-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:300,desc:'عمارة Q4',cat:'q_emara',quarter:'Q4'},
-  {id:'se408e',date:'2026-03-31',type:'income',fund:'emara',apt:'408',aptN:'أ / أحمد عساف',amount:300,desc:'عمارة Q1',cat:'q_emara',quarter:'Q1'},
-  {id:'sa204',date:'2026-03-31',type:'income',fund:'asansir',apt:'204',aptN:'م / نشوى',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa205',date:'2026-03-31',type:'income',fund:'asansir',apt:'205',aptN:'أ / أحمد عثمان',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa206',date:'2026-03-31',type:'income',fund:'asansir',apt:'206',aptN:'أ / نهاد',amount:75,desc:'أسانسير Q1 جزئي',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa207',date:'2026-03-31',type:'income',fund:'asansir',apt:'207',aptN:'أ / نهاد',amount:75,desc:'أسانسير Q1 جزئي',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa208',date:'2026-03-31',type:'income',fund:'asansir',apt:'208',aptN:'أ / محمود',amount:150,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa301a',date:'2026-03-31',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa301b',date:'2026-04-30',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:300,desc:'أسانسير Q2',cat:'q_asansir',quarter:'Q2'},
-  {id:'sa304',date:'2026-03-31',type:'income',fund:'asansir',apt:'304',aptN:'أ / خالد',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa305',date:'2026-04-30',type:'income',fund:'asansir',apt:'305',aptN:'أ / أحمد',amount:300,desc:'أسانسير Q2',cat:'q_asansir',quarter:'Q2'},
-  {id:'sa307',date:'2026-03-31',type:'income',fund:'asansir',apt:'307',aptN:'م / اسر البهنساوى',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa308a',date:'2026-03-31',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa308b',date:'2026-04-30',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:300,desc:'أسانسير Q2',cat:'q_asansir',quarter:'Q2'},
-  {id:'sa401a',date:'2026-03-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
-  {id:'sa401b',date:'2026-06-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:300,desc:'أسانسير Q2',cat:'q_asansir',quarter:'Q2'},
-  {id:'sa401c',date:'2026-09-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:300,desc:'أسانسير Q3',cat:'q_asansir',quarter:'Q3'},
-  {id:'sa401d',date:'2026-12-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:300,desc:'أسانسير Q4',cat:'q_asansir',quarter:'Q4'},
-  {id:'sa408',date:'2026-03-31',type:'income',fund:'asansir',apt:'408',aptN:'أ / أحمد عساف',amount:300,desc:'أسانسير Q1',cat:'q_asansir',quarter:'Q1'},
+ {id:'se02m1',date:'2026-03-31',type:'income',fund:'emara',apt:'002',aptN:'ك / طارق',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se02m2',date:'2026-03-31',type:'income',fund:'emara',apt:'002',aptN:'ك / طارق',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se02m3',date:'2026-03-31',type:'income',fund:'emara',apt:'002',aptN:'ك / طارق',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se04am1',date:'2026-03-31',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se04am2',date:'2026-03-31',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se04am3',date:'2026-03-31',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se04bm1',date:'2026-04-30',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:100,desc:'عمارة أبريل',cat:'q_emara',quarter:'أبريل'},
+ {id:'se04bm2',date:'2026-04-30',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:100,desc:'عمارة مايو',cat:'q_emara',quarter:'مايو'},
+ {id:'se04bm3',date:'2026-04-30',type:'income',fund:'emara',apt:'004',aptN:'أ / محمد زناتى',amount:100,desc:'عمارة يونيو',cat:'q_emara',quarter:'يونيو'},
+ {id:'se107m1',date:'2026-03-31',type:'income',fund:'emara',apt:'107',aptN:'أ / سيد فؤاد',amount:50,desc:'عمارة جزئي يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se107m2',date:'2026-03-31',type:'income',fund:'emara',apt:'107',aptN:'أ / سيد فؤاد',amount:50,desc:'عمارة جزئي فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se107m3',date:'2026-03-31',type:'income',fund:'emara',apt:'107',aptN:'أ / سيد فؤاد',amount:50,desc:'عمارة جزئي مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se108m1',date:'2026-03-31',type:'income',fund:'emara',apt:'108',aptN:'أ / عمر',amount:100,desc:'عمارة + رصيد مقدم يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se108m2',date:'2026-03-31',type:'income',fund:'emara',apt:'108',aptN:'أ / عمر',amount:100,desc:'عمارة + رصيد مقدم فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se108m3',date:'2026-03-31',type:'income',fund:'emara',apt:'108',aptN:'أ / عمر',amount:100,desc:'عمارة + رصيد مقدم مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se204em1',date:'2026-03-31',type:'income',fund:'emara',apt:'204',aptN:'م / نشوى',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se204em2',date:'2026-03-31',type:'income',fund:'emara',apt:'204',aptN:'م / نشوى',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se204em3',date:'2026-03-31',type:'income',fund:'emara',apt:'204',aptN:'م / نشوى',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se205eam1',date:'2026-03-31',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se205eam2',date:'2026-03-31',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se205eam3',date:'2026-03-31',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se205ebm1',date:'2026-04-30',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'عمارة أبريل',cat:'q_emara',quarter:'أبريل'},
+ {id:'se205ebm2',date:'2026-04-30',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'عمارة مايو',cat:'q_emara',quarter:'مايو'},
+ {id:'se205ebm3',date:'2026-04-30',type:'income',fund:'emara',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'عمارة يونيو',cat:'q_emara',quarter:'يونيو'},
+ {id:'se206em1',date:'2026-03-31',type:'income',fund:'emara',apt:'206',aptN:'أ / نهاد',amount:25,desc:'عمارة جزئي يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se206em2',date:'2026-03-31',type:'income',fund:'emara',apt:'206',aptN:'أ / نهاد',amount:25,desc:'عمارة جزئي فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se206em3',date:'2026-03-31',type:'income',fund:'emara',apt:'206',aptN:'أ / نهاد',amount:25,desc:'عمارة جزئي مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se207em1',date:'2026-03-31',type:'income',fund:'emara',apt:'207',aptN:'أ / نهاد',amount:25,desc:'عمارة جزئي يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se207em2',date:'2026-03-31',type:'income',fund:'emara',apt:'207',aptN:'أ / نهاد',amount:25,desc:'عمارة جزئي فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se207em3',date:'2026-03-31',type:'income',fund:'emara',apt:'207',aptN:'أ / نهاد',amount:25,desc:'عمارة جزئي مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se208em1',date:'2026-03-31',type:'income',fund:'emara',apt:'208',aptN:'أ / محمود',amount:50,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se208em2',date:'2026-03-31',type:'income',fund:'emara',apt:'208',aptN:'أ / محمود',amount:50,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se208em3',date:'2026-03-31',type:'income',fund:'emara',apt:'208',aptN:'أ / محمود',amount:50,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se301eam1',date:'2026-03-31',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se301eam2',date:'2026-03-31',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se301eam3',date:'2026-03-31',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se301ebm1',date:'2026-04-30',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:100,desc:'عمارة أبريل',cat:'q_emara',quarter:'أبريل'},
+ {id:'se301ebm2',date:'2026-04-30',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:100,desc:'عمارة مايو',cat:'q_emara',quarter:'مايو'},
+ {id:'se301ebm3',date:'2026-04-30',type:'income',fund:'emara',apt:'301',aptN:'م / ياسر',amount:100,desc:'عمارة يونيو',cat:'q_emara',quarter:'يونيو'},
+ {id:'se304em1',date:'2026-03-31',type:'income',fund:'emara',apt:'304',aptN:'أ / خالد',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se304em2',date:'2026-03-31',type:'income',fund:'emara',apt:'304',aptN:'أ / خالد',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se304em3',date:'2026-03-31',type:'income',fund:'emara',apt:'304',aptN:'أ / خالد',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se307em1',date:'2026-03-31',type:'income',fund:'emara',apt:'307',aptN:'م / اسر البهنساوى',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se307em2',date:'2026-03-31',type:'income',fund:'emara',apt:'307',aptN:'م / اسر البهنساوى',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se307em3',date:'2026-03-31',type:'income',fund:'emara',apt:'307',aptN:'م / اسر البهنساوى',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se308eam1',date:'2026-03-31',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se308eam2',date:'2026-03-31',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se308eam3',date:'2026-03-31',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se308ebm1',date:'2026-04-30',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:100,desc:'عمارة أبريل',cat:'q_emara',quarter:'أبريل'},
+ {id:'se308ebm2',date:'2026-04-30',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:100,desc:'عمارة مايو',cat:'q_emara',quarter:'مايو'},
+ {id:'se308ebm3',date:'2026-04-30',type:'income',fund:'emara',apt:'308',aptN:'أ / بسام',amount:100,desc:'عمارة يونيو',cat:'q_emara',quarter:'يونيو'},
+ {id:'se401eam1',date:'2026-03-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se401eam2',date:'2026-03-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se401eam3',date:'2026-03-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'se401ebm1',date:'2026-06-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة أبريل',cat:'q_emara',quarter:'أبريل'},
+ {id:'se401ebm2',date:'2026-06-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة مايو',cat:'q_emara',quarter:'مايو'},
+ {id:'se401ebm3',date:'2026-06-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة يونيو',cat:'q_emara',quarter:'يونيو'},
+ {id:'se401ecm1',date:'2026-09-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة يوليو',cat:'q_emara',quarter:'يوليو'},
+ {id:'se401ecm2',date:'2026-09-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة أغسطس',cat:'q_emara',quarter:'أغسطس'},
+ {id:'se401ecm3',date:'2026-09-30',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة سبتمبر',cat:'q_emara',quarter:'سبتمبر'},
+ {id:'se401edm1',date:'2026-12-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة أكتوبر',cat:'q_emara',quarter:'أكتوبر'},
+ {id:'se401edm2',date:'2026-12-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة نوفمبر',cat:'q_emara',quarter:'نوفمبر'},
+ {id:'se401edm3',date:'2026-12-31',type:'income',fund:'emara',apt:'401',aptN:'م / مها',amount:100,desc:'عمارة ديسمبر',cat:'q_emara',quarter:'ديسمبر'},
+ {id:'se408em1',date:'2026-03-31',type:'income',fund:'emara',apt:'408',aptN:'أ / أحمد عساف',amount:100,desc:'عمارة يناير',cat:'q_emara',quarter:'يناير'},
+ {id:'se408em2',date:'2026-03-31',type:'income',fund:'emara',apt:'408',aptN:'أ / أحمد عساف',amount:100,desc:'عمارة فبراير',cat:'q_emara',quarter:'فبراير'},
+ {id:'se408em3',date:'2026-03-31',type:'income',fund:'emara',apt:'408',aptN:'أ / أحمد عساف',amount:100,desc:'عمارة مارس',cat:'q_emara',quarter:'مارس'},
+ {id:'sa204m1',date:'2026-03-31',type:'income',fund:'asansir',apt:'204',aptN:'م / نشوى',amount:100,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa204m2',date:'2026-03-31',type:'income',fund:'asansir',apt:'204',aptN:'م / نشوى',amount:100,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa204m3',date:'2026-03-31',type:'income',fund:'asansir',apt:'204',aptN:'م / نشوى',amount:100,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa205m1',date:'2026-03-31',type:'income',fund:'asansir',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa205m2',date:'2026-03-31',type:'income',fund:'asansir',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa205m3',date:'2026-03-31',type:'income',fund:'asansir',apt:'205',aptN:'أ / أحمد عثمان',amount:100,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa206m1',date:'2026-03-31',type:'income',fund:'asansir',apt:'206',aptN:'أ / نهاد',amount:25,desc:'أسانسير جزئي يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa206m2',date:'2026-03-31',type:'income',fund:'asansir',apt:'206',aptN:'أ / نهاد',amount:25,desc:'أسانسير جزئي فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa206m3',date:'2026-03-31',type:'income',fund:'asansir',apt:'206',aptN:'أ / نهاد',amount:25,desc:'أسانسير جزئي مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa207m1',date:'2026-03-31',type:'income',fund:'asansir',apt:'207',aptN:'أ / نهاد',amount:25,desc:'أسانسير جزئي يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa207m2',date:'2026-03-31',type:'income',fund:'asansir',apt:'207',aptN:'أ / نهاد',amount:25,desc:'أسانسير جزئي فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa207m3',date:'2026-03-31',type:'income',fund:'asansir',apt:'207',aptN:'أ / نهاد',amount:25,desc:'أسانسير جزئي مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa208m1',date:'2026-03-31',type:'income',fund:'asansir',apt:'208',aptN:'أ / محمود',amount:50,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa208m2',date:'2026-03-31',type:'income',fund:'asansir',apt:'208',aptN:'أ / محمود',amount:50,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa208m3',date:'2026-03-31',type:'income',fund:'asansir',apt:'208',aptN:'أ / محمود',amount:50,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa301am1',date:'2026-03-31',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:100,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa301am2',date:'2026-03-31',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:100,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa301am3',date:'2026-03-31',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:100,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa301bm1',date:'2026-04-30',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:100,desc:'أسانسير أبريل',cat:'q_asansir',quarter:'أبريل'},
+ {id:'sa301bm2',date:'2026-04-30',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:100,desc:'أسانسير مايو',cat:'q_asansir',quarter:'مايو'},
+ {id:'sa301bm3',date:'2026-04-30',type:'income',fund:'asansir',apt:'301',aptN:'م / ياسر',amount:100,desc:'أسانسير يونيو',cat:'q_asansir',quarter:'يونيو'},
+ {id:'sa304m1',date:'2026-03-31',type:'income',fund:'asansir',apt:'304',aptN:'أ / خالد',amount:100,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa304m2',date:'2026-03-31',type:'income',fund:'asansir',apt:'304',aptN:'أ / خالد',amount:100,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa304m3',date:'2026-03-31',type:'income',fund:'asansir',apt:'304',aptN:'أ / خالد',amount:100,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa305m1',date:'2026-04-30',type:'income',fund:'asansir',apt:'305',aptN:'أ / أحمد',amount:100,desc:'أسانسير أبريل',cat:'q_asansir',quarter:'أبريل'},
+ {id:'sa305m2',date:'2026-04-30',type:'income',fund:'asansir',apt:'305',aptN:'أ / أحمد',amount:100,desc:'أسانسير مايو',cat:'q_asansir',quarter:'مايو'},
+ {id:'sa305m3',date:'2026-04-30',type:'income',fund:'asansir',apt:'305',aptN:'أ / أحمد',amount:100,desc:'أسانسير يونيو',cat:'q_asansir',quarter:'يونيو'},
+ {id:'sa307m1',date:'2026-03-31',type:'income',fund:'asansir',apt:'307',aptN:'م / اسر البهنساوى',amount:100,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa307m2',date:'2026-03-31',type:'income',fund:'asansir',apt:'307',aptN:'م / اسر البهنساوى',amount:100,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa307m3',date:'2026-03-31',type:'income',fund:'asansir',apt:'307',aptN:'م / اسر البهنساوى',amount:100,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa308am1',date:'2026-03-31',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:100,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa308am2',date:'2026-03-31',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:100,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa308am3',date:'2026-03-31',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:100,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa308bm1',date:'2026-04-30',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:100,desc:'أسانسير أبريل',cat:'q_asansir',quarter:'أبريل'},
+ {id:'sa308bm2',date:'2026-04-30',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:100,desc:'أسانسير مايو',cat:'q_asansir',quarter:'مايو'},
+ {id:'sa308bm3',date:'2026-04-30',type:'income',fund:'asansir',apt:'308',aptN:'أ / بسام',amount:100,desc:'أسانسير يونيو',cat:'q_asansir',quarter:'يونيو'},
+ {id:'sa401am1',date:'2026-03-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa401am2',date:'2026-03-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa401am3',date:'2026-03-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
+ {id:'sa401bm1',date:'2026-06-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير أبريل',cat:'q_asansir',quarter:'أبريل'},
+ {id:'sa401bm2',date:'2026-06-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير مايو',cat:'q_asansir',quarter:'مايو'},
+ {id:'sa401bm3',date:'2026-06-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير يونيو',cat:'q_asansir',quarter:'يونيو'},
+ {id:'sa401cm1',date:'2026-09-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير يوليو',cat:'q_asansir',quarter:'يوليو'},
+ {id:'sa401cm2',date:'2026-09-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير أغسطس',cat:'q_asansir',quarter:'أغسطس'},
+ {id:'sa401cm3',date:'2026-09-30',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير سبتمبر',cat:'q_asansir',quarter:'سبتمبر'},
+ {id:'sa401dm1',date:'2026-12-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير أكتوبر',cat:'q_asansir',quarter:'أكتوبر'},
+ {id:'sa401dm2',date:'2026-12-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير نوفمبر',cat:'q_asansir',quarter:'نوفمبر'},
+ {id:'sa401dm3',date:'2026-12-31',type:'income',fund:'asansir',apt:'401',aptN:'م / مها',amount:100,desc:'أسانسير ديسمبر',cat:'q_asansir',quarter:'ديسمبر'},
+ {id:'sa408m1',date:'2026-03-31',type:'income',fund:'asansir',apt:'408',aptN:'أ / أحمد عساف',amount:100,desc:'أسانسير يناير',cat:'q_asansir',quarter:'يناير'},
+ {id:'sa408m2',date:'2026-03-31',type:'income',fund:'asansir',apt:'408',aptN:'أ / أحمد عساف',amount:100,desc:'أسانسير فبراير',cat:'q_asansir',quarter:'فبراير'},
+ {id:'sa408m3',date:'2026-03-31',type:'income',fund:'asansir',apt:'408',aptN:'أ / أحمد عساف',amount:100,desc:'أسانسير مارس',cat:'q_asansir',quarter:'مارس'},
   {id:'srev1',date:'2026-04-01',type:'income',fund:'emara',apt:'',aptN:'',amount:250,desc:'عائد صواعد — شقة 208',cat:'return',quarter:''},
   {id:'sx1',date:'2026-01-31',type:'expense',fund:'emara',amount:150,desc:'نظافة السلم — يناير',cat:'نظافة'},
   {id:'sx2',date:'2026-02-28',type:'expense',fund:'emara',amount:150,desc:'نظافة السلم — فبراير',cat:'نظافة'},
@@ -552,9 +707,11 @@ function fundBal(txns,fund){
     return s;
   },0);
 }
-function aptPaidQ(txns,aptNum,cat,q){
-  return txns.filter(t=>t.apt===aptNum&&t.cat===cat&&t.quarter===q&&t.type==='income').reduce((s,t)=>s+t.amount,0);
+function aptPaidM(txns,aptNum,cat,month){
+  return txns.filter(t=>t.apt===aptNum&&t.cat===cat&&t.quarter===month&&t.type==='income').reduce((s,t)=>s+t.amount,0);
 }
+// Keep old name as alias for compatibility
+function aptPaidQ(txns,aptNum,cat,q){return aptPaidM(txns,aptNum,cat,q);}
 function aptOtherPaid(txns,aptNum){
   return txns.filter(t=>t.apt===aptNum&&t.type==='income'&&!['q_emara','q_asansir'].includes(t.cat));
 }
@@ -568,16 +725,22 @@ function odTotal(apt){
 function aptMatchesCharge(apt,ch){return ch.floors==='all'||ch.floors.includes(apt.f);}
 function chargeAmt(apt,ch){return apt.s==='مقيم'?ch.amt_mq:ch.amt_gm;}
 function chargePaid(txns,aptNum,chId){return txns.filter(t=>t.apt===aptNum&&t.type==='income'&&t.cat==='charge_'+chId).reduce((s,t)=>s+t.amount,0);}
+const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const MONTHS_DUE=4; // يناير–أبريل 2026
+
 function aptNet(apt,txns){
-  const pe1=aptPaidQ(txns,apt.a,'q_emara','Q1'),pe2=aptPaidQ(txns,apt.a,'q_emara','Q2');
-  const pa1=aptPaidQ(txns,apt.a,'q_asansir','Q1'),pa2=aptPaidQ(txns,apt.a,'q_asansir','Q2');
+  const paidE=txns.filter(t=>t.apt===apt.a&&t.cat==='q_emara'&&t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const paidA=txns.filter(t=>t.apt===apt.a&&t.cat==='q_asansir'&&t.type==='income').reduce((s,t)=>s+t.amount,0);
   const others=aptOtherPaid(txns,apt.a).reduce((s,t)=>s+t.amount,0);
   const charges=loadCharges().filter(c=>aptMatchesCharge(apt,c));
   const chDue=charges.reduce((s,c)=>s+chargeAmt(apt,c),0);
   const chPaid=charges.reduce((s,c)=>s+chargePaid(txns,apt.a,c.id),0);
-  const paid=pe1+pe2+pa1+pa2+others+chPaid;
-  const due=(apt.qt_e+apt.qt_a)*2+chDue;
-  return{paid,due,net:paid-due};
+  const paid=paidE+paidA+others+chPaid;
+  const od=odTotal(apt);
+  const odDebt=Math.max(od,0);
+  const odCredit=Math.max(-od,0);
+  const due=apt.qt_e*MONTHS_DUE+(apt.qt_a>0?apt.qt_a*MONTHS_DUE:0)+odDebt+chDue;
+  return{paid,due,paidE,paidA,net:paid+odCredit-due};
 }
 
 // ════════════════════════════
@@ -592,16 +755,18 @@ function tryLogin(){
 }
 function guestMode(){document.getElementById('loginOverlay').style.display='none';renderAptGrid();}
 function showAdminTabs(){
-  ['tab-income','tab-expense','tab-ledger','tab-charges','tab-upload','tab-aptdata'].forEach(id=>document.getElementById(id).style.display='');
+  ['tab-income','tab-expense','tab-ledger','tab-charges','tab-upload','tab-aptdata','tab-gsheets'].forEach(id=>document.getElementById(id).style.display='');
   document.getElementById('resetBtn').style.display='';
+  document.getElementById('backupBtn').style.display='';
   document.getElementById('lockBtn').textContent='🔓 خروج';
   document.getElementById('lockBtn').className='lock-btn open';
 }
 function toggleLock(){
   if(isAdmin){
     isAdmin=false;
-    ['tab-income','tab-expense','tab-ledger','tab-charges','tab-upload','tab-aptdata'].forEach(id=>document.getElementById(id).style.display='none');
+    ['tab-income','tab-expense','tab-ledger','tab-charges','tab-upload','tab-aptdata','tab-gsheets'].forEach(id=>document.getElementById(id).style.display='none');
     document.getElementById('resetBtn').style.display='none';
+    document.getElementById('backupBtn').style.display='none';
     document.getElementById('lockBtn').textContent='🔒 إدارة';
     document.getElementById('lockBtn').className='lock-btn';
     go('apts');
@@ -621,7 +786,7 @@ function go(id){
   document.getElementById('pg-'+id).classList.add('on');
   const btn=document.querySelector(`.nb[onclick="go('${id}')"]`);
   if(btn)btn.classList.add('on');
-  const m={apts:renderAptGrid,overview:renderOverview,income:renderIncome,expense:renderExpenses,ledger:renderLedger,charges:renderCharges,upload:()=>{},stmt:()=>{},aptdata:renderAptData};
+  const m={apts:renderAptGrid,overview:renderOverview,income:renderIncome,expense:renderExpenses,ledger:renderLedger,charges:renderCharges,upload:()=>{},stmt:()=>{},aptdata:renderAptData,gsheets:renderGSheets};
   if(m[id])m[id]();
   window.scrollTo(0,0);
 }
@@ -673,35 +838,46 @@ function openApt(aptNum){
 // ════════════════════════════
 function buildStmt(apt){
   const txns=load();
-  const qs=['Q1','Q2'];
   const od=odTotal(apt);
   const odRows=[{l:'صواعد',v:apt.od.sawaid},{l:'مساهمة أسانسير',v:apt.od.asnr},{l:'عداد مياه',v:apt.od.water},{l:'متأخرات عمارة 2025',v:apt.od.e25},{l:'متأخرات أسانسير 2025',v:apt.od.a25}].filter(r=>r.v!==0);
-  let qHtml='',totalDue=0,totalPaid26=0;
-  qs.forEach(q=>{
-    const pe=aptPaidQ(txns,apt.a,'q_emara',q),pa=aptPaidQ(txns,apt.a,'q_asansir',q);
-    if(apt.qt_e>0){
-      const st=pe>=apt.qt_e?'paid':pe>0?'partial':'unpaid';
-      qHtml+=`<div class="q-cell ${st}"><div class="q-label">عمارة — ${q}</div><div class="q-amount ${st==='paid'?'c-gr':st==='partial'?'c-am':'c-rd'}">${pe>0?L(pe)+' ج':L(apt.qt_e)+' ج'}</div><div class="q-sub">${st==='paid'?'✓ مدفوع':st==='partial'?'متبقي: '+L(apt.qt_e-pe)+' ج':'لم يُدفع'} | مطلوب: ${L(apt.qt_e)} ج</div></div>`;
-      totalDue+=apt.qt_e;totalPaid26+=pe;
-    }
-    if(apt.qt_a>0){
-      const st=pa>=apt.qt_a?'paid':pa>0?'partial':'unpaid';
-      qHtml+=`<div class="q-cell ${st}"><div class="q-label">أسانسير — ${q}</div><div class="q-amount ${st==='paid'?'c-gr':st==='partial'?'c-am':'c-rd'}">${pa>0?L(pa)+' ج':L(apt.qt_a)+' ج'}</div><div class="q-sub">${st==='paid'?'✓ مدفوع':st==='partial'?'متبقي: '+L(apt.qt_a-pa)+' ج':'لم يُدفع'} | مطلوب: ${L(apt.qt_a)} ج</div></div>`;
-      totalDue+=apt.qt_a;totalPaid26+=pa;
-    }
+
+  // Monthly breakdown for current year (يناير → أبريل)
+  const activeMonths=MONTHS.slice(0,MONTHS_DUE);
+  let monthHtml='',totalDue=0,totalPaid26=0;
+  activeMonths.forEach(m=>{
+    const pe=aptPaidM(txns,apt.a,'q_emara',m);
+    const pa=apt.qt_a>0?aptPaidM(txns,apt.a,'q_asansir',m):0;
+    const monthPaid=pe+pa;
+    const monthDue=apt.qt_e+(apt.qt_a>0?apt.qt_a:0);
+    const st=monthPaid>=monthDue?'paid':monthPaid>0?'partial':'unpaid';
+    const icon=st==='paid'?'✓':st==='partial'?'~':'✗';
+    totalDue+=monthDue; totalPaid26+=monthPaid;
+    monthHtml+=`<div class="q-cell ${st}" style="padding:10px 12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="q-label" style="font-size:13px;font-weight:600">${m}</div>
+        <span style="font-size:14px;font-weight:700;color:${st==='paid'?'var(--gr)':st==='partial'?'var(--am)':'var(--rd)'}">${icon}</span>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:6px;font-size:11px;color:var(--tx3)">
+        ${apt.qt_e>0?`<span>عمارة: <strong class="${pe>=apt.qt_e?'c-gr':pe>0?'c-am':'c-rd'}">${pe>0?L(pe)+' ج':'لم يُدفع'}</strong></span>`:''}
+        ${apt.qt_a>0?`<span>أسانسير: <strong class="${pa>=apt.qt_a?'c-gr':pa>0?'c-am':'c-rd'}">${pa>0?L(pa)+' ج':'لم يُدفع'}</strong></span>`:''}
+      </div>
+      ${st==='partial'?`<div style="font-size:11px;color:var(--am);margin-top:3px">متبقي: ${L(monthDue-monthPaid)} ج</div>`:''}
+    </div>`;
   });
+
   const others=aptOtherPaid(txns,apt.a);
   const otherTotal=others.reduce((s,t)=>s+t.amount,0);
   const charges=loadCharges().filter(c=>aptMatchesCharge(apt,c));
   const chDue=charges.reduce((s,c)=>s+chargeAmt(apt,c),0);
   const chPaid=charges.reduce((s,c)=>s+chargePaid(txns,apt.a,c.id),0);
-  const grandNet=totalPaid26+otherTotal+chPaid-totalDue-Math.max(od,0)-chDue;
+  const odCredit=Math.max(-od,0);
+  const grandNet=totalPaid26+otherTotal+chPaid+odCredit-totalDue-Math.max(od,0)-chDue;
 
   return`
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
     <span class="bdg bdg-ac">الدور ${apt.f}</span>
     <span class="bdg ${apt.s==='مقيم'?'bdg-gr':'bdg-gy'}">${apt.s}</span>
-    <span class="bdg bdg-gy">اشتراك ربعي: ${L(apt.qt_e+apt.qt_a)} ج</span>
+    <span class="bdg bdg-gy">اشتراك شهري: ${L(apt.qt_e+apt.qt_a)} ج</span>
   </div>
 
   ${odRows.length||apt.od.m26<0?`
@@ -710,17 +886,17 @@ function buildStmt(apt){
     <thead><tr><th>البند</th><th>المبلغ</th></tr></thead>
     <tbody>
       ${odRows.map(r=>`<tr><td>${r.l}</td><td class="${r.v>0?'c-rd':'c-gr'}">${r.v>0?L(r.v)+' ج':'رصيد دائن +'+L(Math.abs(r.v))+' ج'}</td></tr>`).join('')}
-      <tr style="background:var(--bg3)"><td style="font-weight:600">الإجمالي</td><td class="${od>0?'c-rd':'c-gr'}" style="font-weight:700">${od>0?L(od)+' ج مطلوبة':'رصيد دائن +'+L(Math.abs(od))+' ج'}</td></tr>
+      <tr style="background:var(--bg3)"><td style="font-weight:600">الإجمالي</td><td class="${od>0?'c-rd':'c-gr'}" style="font-weight:700">${od>0?L(od)+' ج':od<0?'رصيد دائن +'+L(Math.abs(od))+' ج':'صفر'}</td></tr>
     </tbody>
   </table></div>`:''}
-  ${apt.od.m26<0?`<div class="notice ok" style="margin-bottom:12px">رصيد دائن من فترة سابقة: <strong>+${L(Math.abs(apt.od.m26))} ج</strong> — مُضاف لصالح الشقة في الحساب الكلي</div>`:''}`:
+  ${apt.od.m26<0?`<div class="notice ok" style="margin-bottom:12px">رصيد دائن من فترة سابقة: <strong>+${L(Math.abs(apt.od.m26))} ج</strong></div>`:''}`:
   `<div class="notice ok" style="margin-bottom:14px">✓ لا توجد مستحقات سابقة</div>`}
 
-  <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">مستحقات 2026</div>
-  <div class="q-grid" style="margin-bottom:8px">${qHtml}</div>
+  <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">مستحقات 2026 — شهر بشهر</div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">${monthHtml}</div>
   <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;margin-bottom:16px">
     <span class="c-tx2">مدفوع: <strong class="c-gr">${L(totalPaid26)} ج</strong></span>
-    <span class="c-tx2">مطلوب: <strong>${L(totalDue)} ج</strong></span>
+    <span class="c-tx2">مطلوب (${MONTHS_DUE} أشهر): <strong>${L(totalDue)} ج</strong></span>
     <strong class="${totalPaid26>=totalDue?'c-gr':'c-rd'}">${totalPaid26>=totalDue?'✓ ملتزم':'متبقي: '+L(totalDue-totalPaid26)+' ج'}</strong>
   </div>
 
@@ -773,15 +949,16 @@ function renderOverview(){
       <div class="prog"><div class="pf" style="width:${Math.min(100,Math.max(0,Math.round(abal/10000*100)))}%;background:var(--tl)"></div></div></div>`;
   // Stats
   const mqC=APTS.filter(a=>a.s==='مقيم').length,gmC=APTS.filter(a=>a.s==='غير مقيم').length;
-  const eQ1=APTS.filter(a=>aptPaidQ(txns,a.a,'q_emara','Q1')>=a.qt_e).length;
-  const eQ2=APTS.filter(a=>aptPaidQ(txns,a.a,'q_emara','Q2')>=a.qt_e).length;
+  const activeMonths=MONTHS.slice(0,MONTHS_DUE);
+  const ePaidAll=APTS.filter(a=>activeMonths.every(m=>aptPaidM(txns,a.a,'q_emara',m)>=a.qt_e)).length;
+  const ePartial=APTS.filter(a=>activeMonths.some(m=>aptPaidM(txns,a.a,'q_emara',m)>=a.qt_e)&&!activeMonths.every(m=>aptPaidM(txns,a.a,'q_emara',m)>=a.qt_e)).length;
   const asApts=APTS.filter(a=>a.qt_a>0);
-  const aQ1=asApts.filter(a=>aptPaidQ(txns,a.a,'q_asansir','Q1')>=a.qt_a).length;
-  const aQ2=asApts.filter(a=>aptPaidQ(txns,a.a,'q_asansir','Q2')>=a.qt_a).length;
+  const aPaidAll=asApts.filter(a=>activeMonths.every(m=>aptPaidM(txns,a.a,'q_asansir',m)>=a.qt_a)).length;
+  const aPartial=asApts.filter(a=>activeMonths.some(m=>aptPaidM(txns,a.a,'q_asansir',m)>=a.qt_a)&&!activeMonths.every(m=>aptPaidM(txns,a.a,'q_asansir',m)>=a.qt_a)).length;
   const sawaidOwed=APTS.filter(a=>a.od.sawaid>0);
   const sawaidPaid=[...new Set(txns.filter(t=>t.cat==='sawaid'&&t.apt).map(t=>t.apt))];
   const expByCat={};txns.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.cat||'أخرى']=(expByCat[t.cat||'أخرى']||0)+t.amount;});
-  function pb(v,mx,c){const p=Math.round(v/mx*100);return`<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><div style="flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="width:${p}%;height:100%;background:${c}"></div></div><span style="font-size:11px;color:${c};min-width:36px">${p}% (${v})</span></div>`;}
+  function pb(v,mx,c){const p=mx>0?Math.round(v/mx*100):0;return`<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><div style="flex:1;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden"><div style="width:${p}%;height:100%;background:${c}"></div></div><span style="font-size:11px;color:${c};min-width:36px">${p}% (${v}/${mx})</span></div>`;}
   document.getElementById('ov-stats').innerHTML=`
   <div class="card">
     <div class="ct">إحصائيات السكان</div>
@@ -789,10 +966,10 @@ function renderOverview(){
       <div style="flex:1;background:var(--ac-bg);border:1px solid #bfdbfe;border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--ac)">${mqC}</div><div style="font-size:11px;color:var(--tx3)">مقيم</div></div>
       <div style="flex:1;background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:12px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--tx2)">${gmC}</div><div style="font-size:11px;color:var(--tx3)">غير مقيم</div></div>
     </div>
-    <div style="font-size:12px;color:var(--tx2);margin-bottom:3px;font-weight:500">التزام عمارة Q1</div>${pb(eQ1,40,'var(--gr)')}
-    <div style="font-size:12px;color:var(--tx2);margin:8px 0 3px;font-weight:500">التزام عمارة Q2</div>${pb(eQ2,40,'var(--gr)')}
-    <div style="font-size:12px;color:var(--tx2);margin:8px 0 3px;font-weight:500">التزام أسانسير Q1</div>${pb(aQ1,asApts.length,'var(--tl)')}
-    <div style="font-size:12px;color:var(--tx2);margin:8px 0 3px;font-weight:500">التزام أسانسير Q2</div>${pb(aQ2,asApts.length,'var(--tl)')}
+    <div style="font-size:12px;color:var(--tx2);margin-bottom:3px;font-weight:500">ملتزمون عمارة (${activeMonths.join('–')})</div>${pb(ePaidAll,40,'var(--gr)')}
+    <div style="font-size:12px;color:var(--tx2);margin:6px 0 3px;font-weight:500">جزئي عمارة</div>${pb(ePartial,40,'var(--am)')}
+    <div style="font-size:12px;color:var(--tx2);margin:6px 0 3px;font-weight:500">ملتزمون أسانسير (${asApts.length} شقة)</div>${pb(aPaidAll,asApts.length,'var(--tl)')}
+    <div style="font-size:12px;color:var(--tx2);margin:6px 0 3px;font-weight:500">جزئي أسانسير</div>${pb(aPartial,asApts.length,'var(--tl)')}
     <div style="height:8px"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--bd)">
       <div><div style="font-size:13px;font-weight:500">صواعد 2025</div><div style="font-size:11px;color:var(--tx3)">${sawaidOwed.length} شقة عليها صواعد | ${sawaidPaid.length} سدّدوا</div></div>
@@ -930,10 +1107,15 @@ function renderLedger(){
 // ════════════════════════════
 // CHARGES
 // ════════════════════════════
+function toggleAllFloors(){
+  const cbs=[...document.querySelectorAll('.ch-fl-cb')];
+  const allChecked=cbs.every(c=>c.checked);
+  cbs.forEach(c=>c.checked=!allChecked);
+  previewCharge();
+}
 function getFloorsSel(){
-  const sel=document.getElementById('ch-floors');
-  const vals=[...sel.selectedOptions].map(o=>o.value);
-  return vals.includes('all')?'all':vals;
+  const checked=[...document.querySelectorAll('.ch-fl-cb:checked')].map(c=>c.value);
+  return checked.length===0?'none':checked.length===5?'all':checked;
 }
 function previewCharge(){
   const mq=parseFloat(document.getElementById('ch-mq').value)||0;
@@ -950,11 +1132,14 @@ function addCharge(){
   const mq=parseFloat(document.getElementById('ch-mq').value)||0;
   const gm=parseFloat(document.getElementById('ch-gm').value)||0;
   const floors=getFloorsSel();
+  const payType=document.getElementById('ch-pay-type').value;
   if(!name||!date||(mq===0&&gm===0)){setMsg('ch-msg','⚠ أكمل اسم البند والتاريخ والمبلغ','var(--rd)');return;}
-  const charge={id:'ch'+Date.now(),date,name,fund,amt_mq:mq,amt_gm:gm,floors};
+  if(floors==='none'){setMsg('ch-msg','⚠ اختر دور واحد على الأقل','var(--rd)');return;}
+  const charge={id:'ch'+Date.now(),date,name,fund,amt_mq:mq,amt_gm:gm,floors,pay_type:payType};
   const arr=loadCharges();arr.push(charge);saveCharges(arr);
-  setMsg('ch-msg',`✓ تمت إضافة "${name}" لـ ${APTS.filter(a=>aptMatchesCharge(a,charge)).length} شقة`,'var(--gr)');
+  setMsg('ch-msg',`✓ تمت إضافة "${name}" لـ ${APTS.filter(a=>aptMatchesCharge(a,charge)).length} شقة — ${payType==='monthly'?'شهري':'مرة واحدة'}`,'var(--gr)');
   document.getElementById('ch-name').value='';
+  document.querySelectorAll('.ch-fl-cb').forEach(c=>c.checked=false);
   renderCharges();renderAptGrid();
 }
 function renderCharges(){
@@ -971,7 +1156,7 @@ function renderCharges(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
           <div style="font-size:14px;font-weight:600">${ch.name}</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:2px">${ch.date} | ${ch.fund==='emara'?'عمارة':'أسانسير'} | مقيم: ${ch.amt_mq} ج | غير مقيم: ${ch.amt_gm} ج | ${ch.floors==='all'?'كل الأدوار':ch.floors.join(', ')}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">${ch.date} | ${ch.fund==='emara'?'عمارة':'أسانسير'} | مقيم: ${ch.amt_mq} ج | غير مقيم: ${ch.amt_gm} ج | ${ch.floors==='all'?'كل الأدوار':Array.isArray(ch.floors)?ch.floors.join(', '):'كل الأدوار'} | <span class="bdg ${ch.pay_type==='monthly'?'bdg-ac':'bdg-gy'}" style="font-size:10px">${ch.pay_type==='monthly'?'شهري':'مرة واحدة'}</span></div>
         </div>
         <button class="btn btn-sm btn-rd" data-id="${ch.id}" onclick="deleteCharge(this.dataset.id)">حذف</button>
       </div>
@@ -1067,12 +1252,13 @@ function exportExcel(mode){
   ws['!cols']=[{wch:12},{wch:6},{wch:20},{wch:28},{wch:10},{wch:8},{wch:14},{wch:6},{wch:10}];
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheetName);
   if(mode==='all'){
-    const ah=['الشقة','المالك','الدور','الحالة','مستحقات سابقة','عمارة Q1','عمارة Q2','أسانسير Q1','أسانسير Q2','إجمالي مدفوع','المطلوب','الصافي'];
+    const ah=['الشقة','المالك','الدور','الحالة','مستحقات سابقة',...MONTHS.slice(0,MONTHS_DUE).map(m=>'عمارة '+m),...MONTHS.slice(0,MONTHS_DUE).filter((_,i)=>true).map(m=>'أسانسير '+m),'إجمالي مدفوع','المطلوب','الصافي'];
     const ad=APTS.map(a=>{
-      const pe1=aptPaidQ(txns,a.a,'q_emara','Q1'),pe2=aptPaidQ(txns,a.a,'q_emara','Q2');
-      const pa1=aptPaidQ(txns,a.a,'q_asansir','Q1'),pa2=aptPaidQ(txns,a.a,'q_asansir','Q2');
-      const paid=pe1+pe2+pa1+pa2,due=(a.qt_e+a.qt_a)*2;
-      return[a.a,a.n,a.f,a.s,Object.values(a.od).reduce((s,v)=>s+v,0),pe1,pe2,pa1,pa2,paid,due,paid-due];
+      const eM=MONTHS.slice(0,MONTHS_DUE).map(m=>aptPaidM(txns,a.a,'q_emara',m));
+      const aM=MONTHS.slice(0,MONTHS_DUE).map(m=>aptPaidM(txns,a.a,'q_asansir',m));
+      const paid=eM.reduce((s,v)=>s+v,0)+aM.reduce((s,v)=>s+v,0);
+      const due=(a.qt_e+a.qt_a)*MONTHS_DUE;
+      return[a.a,a.n,a.f,a.s,Object.values(a.od).reduce((s,v)=>s+v,0),...eM,...aM,paid,due,paid-due];
     });
     const ws2=XLSX.utils.aoa_to_sheet([ah,...ad]);
     ws2['!cols']=[{wch:6},{wch:22},{wch:8},{wch:10},{wch:12},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:10},{wch:10}];
@@ -1082,8 +1268,79 @@ function exportExcel(mode){
 }
 
 // ════════════════════════════
-// UTILS
+// BACKUP / RESTORE
 // ════════════════════════════
+function backupToExcel(){
+  const txns=load(), charges=loadCharges(), aptsData=APTS;
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: transactions
+  const txnH=['id','التاريخ','النوع','الصندوق','الشقة','اسم المالك','البيان','الفئة','الشهر','المبلغ'];
+  const txnD=txns.map(t=>[t.id,t.date,t.type,t.fund||'',t.apt||'',t.aptN||'',t.desc,t.cat||'',t.quarter||'',t.amount]);
+  const ws1=XLSX.utils.aoa_to_sheet([txnH,...txnD]);
+  ws1['!cols']=[{wch:16},{wch:12},{wch:10},{wch:10},{wch:6},{wch:20},{wch:28},{wch:14},{wch:10},{wch:10}];
+  XLSX.utils.book_append_sheet(wb,ws1,'العمليات');
+
+  // Sheet 2: charges
+  const chH=['id','التاريخ','الاسم','الصندوق','مقيم','غير مقيم','الأدوار','نوع الدفع'];
+  const chD=charges.map(c=>[c.id,c.date,c.name,c.fund,c.amt_mq,c.amt_gm,Array.isArray(c.floors)?c.floors.join('|'):c.floors,c.pay_type||'one_time']);
+  const ws2=XLSX.utils.aoa_to_sheet([chH,...chD]);
+  XLSX.utils.book_append_sheet(wb,ws2,'البنود_الجماعية');
+
+  // Sheet 3: apartments
+  const apH=['رقم','المالك','الدور','الحالة','عمارة/شهر','أسانسير/شهر'];
+  const apD=aptsData.map(a=>[a.a,a.n,a.f,a.s,a.qt_e,a.qt_a]);
+  const ws3=XLSX.utils.aoa_to_sheet([apH,...apD]);
+  XLSX.utils.book_append_sheet(wb,ws3,'الشقق');
+
+  XLSX.writeFile(wb,`backup_عمارة_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+function restoreFromExcel(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.xlsx,.xls';
+  input.onchange=e=>{
+    const file=e.target.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        const wb=XLSX.read(ev.target.result,{type:'array'});
+        let restored=0;
+
+        // Restore transactions
+        const ws1=wb.Sheets['العمليات'];
+        if(ws1){
+          const rows=XLSX.utils.sheet_to_json(ws1,{header:1,defval:''}).slice(1).filter(r=>r[0]);
+          const txns=rows.map(r=>({id:String(r[0]),date:String(r[1]),type:String(r[2]),fund:String(r[3]),apt:String(r[4]),aptN:String(r[5]),desc:String(r[6]),cat:String(r[7]),quarter:String(r[8]),amount:parseFloat(r[9])||0}));
+          save(txns); localStorage.setItem(KI,'1'); restored+=txns.length;
+        }
+
+        // Restore charges
+        const ws2=wb.Sheets['البنود_الجماعية'];
+        if(ws2){
+          const rows=XLSX.utils.sheet_to_json(ws2,{header:1,defval:''}).slice(1).filter(r=>r[0]);
+          const charges=rows.map(r=>({id:String(r[0]),date:String(r[1]),name:String(r[2]),fund:String(r[3]),amt_mq:parseFloat(r[4])||0,amt_gm:parseFloat(r[5])||0,floors:String(r[6]).includes('|')?String(r[6]).split('|'):String(r[6]),pay_type:String(r[7])||'one_time'}));
+          saveCharges(charges);
+        }
+
+        // Restore apartments
+        const ws3=wb.Sheets['الشقق'];
+        if(ws3){
+          const rows=XLSX.utils.sheet_to_json(ws3,{header:1,defval:''}).slice(1).filter(r=>r[0]);
+          const apts=rows.map(r=>({a:String(r[0]).padStart(3,'0'),n:String(r[1]),f:String(r[2]),s:String(r[3]),qt_e:parseFloat(r[4])||0,qt_a:parseFloat(r[5])||0,od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}}));
+          if(apts.length>0){APTS.length=0;apts.forEach(a=>APTS.push(a));saveAptsCustom(APTS);}
+        }
+
+        renderAptGrid(); renderOverview();
+        alert(`✓ تم استعادة ${restored} عملية بنجاح`);
+      }catch(err){alert('خطأ في قراءة الملف: '+err.message);}
+    };
+    reader.readAsArrayBuffer(file);
+  };
+  input.click();
+}
+
+
 function delTxn(id){
   if(!confirm('حذف هذه العملية؟'))return;
   save(load().filter(t=>t.id!==id));
@@ -1145,6 +1402,101 @@ function addNewApt(){
   renderAptData();renderAptGrid();
   document.getElementById('na-num').value='';document.getElementById('na-name').value='';
   setMsg('na-msg','✓ تمت إضافة شقة '+num,'var(--gr)');
+}
+
+// ════════════════════════════
+// GOOGLE SHEETS
+// ════════════════════════════
+const KGS='bms5_gs_url';
+const GS_CODE=`// صندوق العمارة — Google Apps Script
+const SH='BMS_Data';
+function doPost(e){
+  try{
+    const d=JSON.parse(e.postData.contents);
+    const ss=SpreadsheetApp.getActiveSpreadsheet();
+    let sh=ss.getSheetByName(SH)||ss.insertSheet(SH);
+    if(d.action==='push'){
+      sh.clearContents();
+      const rows=[['type','id','date','fund','apt','aptN','desc','cat','month','amount','extra']];
+      (d.txns||[]).forEach(t=>rows.push(['txn',t.id,t.date,t.fund||'',t.apt||'',t.aptN||'',t.desc,t.cat||'',t.quarter||'',t.amount,t.toFund||'']));
+      (d.charges||[]).forEach(c=>rows.push(['charge',c.id,c.date,c.fund,JSON.stringify(c.floors),'',c.name,c.pay_type||'one_time',c.amt_mq,c.amt_gm,'']));
+      (d.apts||[]).forEach(a=>rows.push(['apt',a.a,'',a.f,a.s,'',a.n,'',a.qt_e,a.qt_a,JSON.stringify(a.od||{})]));
+      sh.getRange(1,1,rows.length,11).setValues(rows);
+      return ContentService.createTextOutput(JSON.stringify({ok:true,rows:rows.length-1})).setMimeType(ContentService.MimeType.JSON);
+    }
+    if(d.action==='pull'){
+      const vals=sh.getDataRange().getValues();
+      const txns=[],charges=[],apts=[];
+      vals.slice(1).forEach(r=>{
+        const tp=String(r[0]);
+        if(tp==='txn') txns.push({id:String(r[1]),date:String(r[2]),type:'income',fund:String(r[3]),apt:String(r[4]),aptN:String(r[5]),desc:String(r[6]),cat:String(r[7]),quarter:String(r[8]),amount:parseFloat(r[9])||0});
+        if(tp==='charge') charges.push({id:String(r[1]),date:String(r[2]),fund:String(r[3]),floors:JSON.parse(String(r[4])),name:String(r[6]),pay_type:String(r[7]),amt_mq:parseFloat(r[8])||0,amt_gm:parseFloat(r[9])||0});
+        if(tp==='apt') apts.push({a:String(r[1]),f:String(r[3]),s:String(r[4]),n:String(r[6]),qt_e:parseFloat(r[8])||0,qt_a:parseFloat(r[9])||0,od:JSON.parse(String(r[10])||'{}')});
+      });
+      return ContentService.createTextOutput(JSON.stringify({ok:true,txns,charges,apts})).setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ok:false,error:'unknown action'})).setMimeType(ContentService.MimeType.JSON);
+  }catch(err){return ContentService.createTextOutput(JSON.stringify({ok:false,error:err.toString()})).setMimeType(ContentService.MimeType.JSON);}
+}
+function doGet(){return ContentService.createTextOutput(JSON.stringify({ok:true,msg:'BMS API ready'})).setMimeType(ContentService.MimeType.JSON);}`;
+
+function renderGSheets(){
+  const el=document.getElementById('gs-code');
+  if(el) el.value=GS_CODE;
+  const url=localStorage.getItem(KGS)||'';
+  const inp=document.getElementById('gs-url');
+  if(inp) inp.value=url;
+  const sc=document.getElementById('gs-sync-card');
+  if(sc) sc.style.display=url?'block':'none';
+}
+function saveGSUrl(){
+  const url=document.getElementById('gs-url').value.trim();
+  if(!url){setMsg('gs-msg','⚠ أدخل الـ URL أولاً','var(--rd)');return;}
+  localStorage.setItem(KGS,url);
+  document.getElementById('gs-sync-card').style.display='block';
+  setMsg('gs-msg','✓ تم الحفظ — اضغط اختبار الاتصال','var(--gr)');
+}
+async function testGSConnection(){
+  const url=localStorage.getItem(KGS);
+  if(!url){setMsg('gs-msg','⚠ احفظ الـ URL أولاً','var(--rd)');return;}
+  setMsg('gs-msg','⏳ جاري الاختبار...','var(--tx2)');
+  try{
+    const r=await fetch(url,{redirect:'follow'});
+    const d=await r.json();
+    setMsg('gs-msg',d.ok?'✓ الاتصال ناجح':'⚠ مشكلة: '+d.error,'var(--gr)');
+  }catch(e){setMsg('gs-msg','✗ فشل الاتصال — تأكد من الـ URL وأن النشر على Anyone','var(--rd)');}
+}
+async function pushToSheets(){
+  const url=localStorage.getItem(KGS);
+  if(!url){alert('اذهب لتاب Google Sheets واحفظ الـ URL أولاً');return;}
+  setMsg('gs-sync-msg','⏳ جاري الرفع...','var(--tx2)');
+  try{
+    const r=await fetch(url,{method:'POST',body:JSON.stringify({action:'push',txns:load(),charges:loadCharges(),apts:APTS})});
+    const d=await r.json();
+    setMsg('gs-sync-msg',d.ok?`✓ تم رفع ${d.rows} صف على Google Sheets`:'⚠ '+d.error,d.ok?'var(--gr)':'var(--rd)');
+  }catch(e){setMsg('gs-sync-msg','✗ فشل: '+e.message,'var(--rd)');}
+}
+async function pullFromSheets(){
+  const url=localStorage.getItem(KGS);
+  if(!url){alert('اذهب لتاب Google Sheets واحفظ الـ URL أولاً');return;}
+  if(!confirm('سيتم استبدال البيانات المحلية بالبيانات من Google Sheets. متأكد؟'))return;
+  setMsg('gs-sync-msg','⏳ جاري التحميل...','var(--tx2)');
+  try{
+    const r=await fetch(url,{method:'POST',body:JSON.stringify({action:'pull'})});
+    const d=await r.json();
+    if(!d.ok){setMsg('gs-sync-msg','⚠ '+d.error,'var(--rd)');return;}
+    if(d.txns?.length) save(d.txns);
+    if(d.charges?.length) saveCharges(d.charges);
+    if(d.apts?.length){
+      APTS=d.apts.map(a=>{
+        const def=APTS_DEFAULT.find(x=>x.a===a.a)||{od:{sawaid:0,asnr:0,water:0,e25:0,a25:0,m26:0}};
+        return{...def,...a,od:{...def.od,...(a.od||{})}};
+      });
+      saveAptsCustom(APTS);
+    }
+    setMsg('gs-sync-msg',`✓ تم تحميل ${d.txns?.length||0} عملية، ${d.charges?.length||0} بند، ${d.apts?.length||0} شقة`,'var(--gr)');
+    renderAptGrid();
+  }catch(e){setMsg('gs-sync-msg','✗ فشل التحميل: '+e.message,'var(--rd)');}
 }
 
 
