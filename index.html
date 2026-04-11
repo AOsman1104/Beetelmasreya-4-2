@@ -419,7 +419,7 @@ select.fc option{background:var(--bg2)}
       <button class="btn btn-gy btn-sm" onclick="if(confirm('استعادة بيانات الشقق الأصلية؟')){localStorage.removeItem(KA);APTS=JSON.parse(JSON.stringify(APTS_DEFAULT));renderAptData();renderAptGrid();}">↺ استعادة الأصلية</button>
     </div>
     <div class="tw"><table id="apt-data-tbl">
-      <thead><tr><th>رقم</th><th>المالك</th><th>الدور</th><th>الحالة</th><th>عمارة/ربع</th><th>أسانسير/ربع</th><th></th></tr></thead>
+      <thead><tr><th>رقم</th><th>المالك</th><th>الدور</th><th>الحالة</th><th>عمارة/شهر</th><th>أسانسير/شهر</th><th>سجل التحولات</th><th></th></tr></thead>
       <tbody id="ad-tbody"></tbody>
     </table></div>
   </div>
@@ -708,29 +708,48 @@ function fundBal(txns,fund){
   },0);
 }
 function aptPaidM(txns,aptNum,cat,month){
-  return txns.filter(t=>t.apt===aptNum&&t.cat===cat&&t.quarter===month&&t.type==='income').reduce((s,t)=>s+t.amount,0);
+  // Only count payments from current year
+  return txns.filter(t=>t.apt===aptNum&&t.cat===cat&&t.quarter===month&&t.type==='income'&&t.date&&t.date.startsWith(String(CURRENT_YEAR))).reduce((s,t)=>s+t.amount,0);
 }
 // Keep old name as alias for compatibility
 function aptPaidQ(txns,aptNum,cat,q){return aptPaidM(txns,aptNum,cat,q);}
+
+// Returns {qt_e, qt_a, s} for a given month index (0=Jan) in current year
+// Checks statusHistory if exists — most recent entry before/on that month wins
+function getAptRateForMonth(apt, monthIdx){
+  const base={qt_e:apt.qt_e, qt_a:apt.qt_a, s:apt.s};
+  if(!apt.statusHistory||!apt.statusHistory.length) return base;
+  // statusHistory entries: {from:'2026-06', s:'مقيم', qt_e:100, qt_a:100}
+  // from = YYYY-MM = month this status started
+  const cy=String(CURRENT_YEAR);
+  const mKey=cy+'-'+(String(monthIdx+1).padStart(2,'0')); // e.g. "2026-06"
+  // Find the applicable entry: last one whose 'from' <= mKey
+  const applicable=[...apt.statusHistory]
+    .filter(h=>h.from<=mKey)
+    .sort((a,b)=>b.from.localeCompare(a.from))[0];
+  if(applicable) return {qt_e:applicable.qt_e, qt_a:applicable.qt_a, s:applicable.s};
+  // If no history entry applies yet, use current values
+  return base;
+}
 function aptOtherPaid(txns,aptNum){
-  return txns.filter(t=>t.apt===aptNum&&t.type==='income'&&!['q_emara','q_asansir'].includes(t.cat));
+  return txns.filter(t=>t.apt===aptNum&&t.type==='income'&&!['q_emara','q_asansir'].includes(t.cat)&&t.date&&t.date.startsWith(String(CURRENT_YEAR)));
 }
 function odTotal(apt){
+  // m26 مستحقات 2026 — بتتحسب بشكل منفصل من الدفعات الفعلية، مش من هنا
   const {m26,...rest}=apt.od;
-  const base=Object.values(rest).reduce((s,v)=>s+v,0);
-  // m26 > 0 = debt already tracked in Q1 → exclude
-  // m26 < 0 = رصيد دائن for the apartment → keep as credit
-  return base + (m26<0 ? m26 : 0);
+  return Object.values(rest).reduce((s,v)=>s+v,0);
 }
 function aptMatchesCharge(apt,ch){return ch.floors==='all'||ch.floors.includes(apt.f);}
 function chargeAmt(apt,ch){return apt.s==='مقيم'?ch.amt_mq:ch.amt_gm;}
-function chargePaid(txns,aptNum,chId){return txns.filter(t=>t.apt===aptNum&&t.type==='income'&&t.cat==='charge_'+chId).reduce((s,t)=>s+t.amount,0);}
+function chargePaid(txns,aptNum,chId){return txns.filter(t=>t.apt===aptNum&&t.type==='income'&&t.cat==='charge_'+chId&&t.date&&t.date.startsWith(String(CURRENT_YEAR))).reduce((s,t)=>s+t.amount,0);}
 const MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-const MONTHS_DUE=4; // يناير–أبريل 2026
+// عدد الأشهر المستحقة = الشهر الحالي (1 يناير → 12 ديسمبر) — يتجدد تلقائياً كل سنة
+const CURRENT_YEAR = new Date().getFullYear();
+const MONTHS_DUE = new Date().getMonth() + 1; // 1-12
 
 function aptNet(apt,txns){
-  const paidE=txns.filter(t=>t.apt===apt.a&&t.cat==='q_emara'&&t.type==='income').reduce((s,t)=>s+t.amount,0);
-  const paidA=txns.filter(t=>t.apt===apt.a&&t.cat==='q_asansir'&&t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const paidE=txns.filter(t=>t.apt===apt.a&&t.cat==='q_emara'&&t.type==='income'&&t.date?.startsWith(String(CURRENT_YEAR))).reduce((s,t)=>s+t.amount,0);
+  const paidA=txns.filter(t=>t.apt===apt.a&&t.cat==='q_asansir'&&t.type==='income'&&t.date?.startsWith(String(CURRENT_YEAR))).reduce((s,t)=>s+t.amount,0);
   const others=aptOtherPaid(txns,apt.a).reduce((s,t)=>s+t.amount,0);
   const charges=loadCharges().filter(c=>aptMatchesCharge(apt,c));
   const chDue=charges.reduce((s,c)=>s+chargeAmt(apt,c),0);
@@ -738,9 +757,12 @@ function aptNet(apt,txns){
   const paid=paidE+paidA+others+chPaid;
   const od=odTotal(apt);
   const odDebt=Math.max(od,0);
-  const odCredit=Math.max(-od,0);
-  const due=apt.qt_e*MONTHS_DUE+(apt.qt_a>0?apt.qt_a*MONTHS_DUE:0)+odDebt+chDue;
-  return{paid,due,paidE,paidA,net:paid+odCredit-due};
+  // Due = sum of per-month rates for each month up to MONTHS_DUE
+  const due=MONTHS.slice(0,MONTHS_DUE).reduce((s,_,mi)=>{
+    const r=getAptRateForMonth(apt,mi);
+    return s+r.qt_e+(r.qt_a>0?r.qt_a:0);
+  },0)+odDebt+chDue;
+  return{paid,due,paidE,paidA,net:paid-due};
 }
 
 // ════════════════════════════
@@ -841,17 +863,22 @@ function buildStmt(apt){
   const od=odTotal(apt);
   const odRows=[{l:'صواعد',v:apt.od.sawaid},{l:'مساهمة أسانسير',v:apt.od.asnr},{l:'عداد مياه',v:apt.od.water},{l:'متأخرات عمارة 2025',v:apt.od.e25},{l:'متأخرات أسانسير 2025',v:apt.od.a25}].filter(r=>r.v!==0);
 
-  // Monthly breakdown for current year (يناير → أبريل)
+  // Monthly breakdown: show due months + any extra paid months
   const activeMonths=MONTHS.slice(0,MONTHS_DUE);
-  let monthHtml='',totalDue=0,totalPaid26=0;
-  activeMonths.forEach(m=>{
+  // Count ALL payments made (even beyond MONTHS_DUE)
+  const totalPaidEmara=MONTHS.reduce((s,m)=>s+aptPaidM(txns,apt.a,'q_emara',m),0);
+  const totalPaidAsansir=MONTHS.reduce((s,m)=>s+aptPaidM(txns,apt.a,'q_asansir',m),0);
+  const totalPaid26=totalPaidEmara+totalPaidAsansir;
+  let monthHtml='',totalDue=0;
+  activeMonths.forEach((m,mi)=>{
     const pe=aptPaidM(txns,apt.a,'q_emara',m);
-    const pa=apt.qt_a>0?aptPaidM(txns,apt.a,'q_asansir',m):0;
+    const rate=getAptRateForMonth(apt,mi);
+    const pa=rate.qt_a>0?aptPaidM(txns,apt.a,'q_asansir',m):0;
     const monthPaid=pe+pa;
-    const monthDue=apt.qt_e+(apt.qt_a>0?apt.qt_a:0);
+    const monthDue=rate.qt_e+(rate.qt_a>0?rate.qt_a:0);
     const st=monthPaid>=monthDue?'paid':monthPaid>0?'partial':'unpaid';
     const icon=st==='paid'?'✓':st==='partial'?'~':'✗';
-    totalDue+=monthDue; totalPaid26+=monthPaid;
+    totalDue+=monthDue;
     monthHtml+=`<div class="q-cell ${st}" style="padding:10px 12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="q-label" style="font-size:13px;font-weight:600">${m}</div>
@@ -865,13 +892,18 @@ function buildStmt(apt){
     </div>`;
   });
 
+  // Calculate advance payments (months paid beyond MONTHS_DUE) as credit
+  const extraPaidEmara = MONTHS.slice(MONTHS_DUE).reduce((s,m)=>s+aptPaidM(txns,apt.a,'q_emara',m),0);
+  const extraPaidAsansir = MONTHS.slice(MONTHS_DUE).reduce((s,m)=>s+aptPaidM(txns,apt.a,'q_asansir',m),0);
+  const advanceCredit = extraPaidEmara + extraPaidAsansir;
+
   const others=aptOtherPaid(txns,apt.a);
   const otherTotal=others.reduce((s,t)=>s+t.amount,0);
   const charges=loadCharges().filter(c=>aptMatchesCharge(apt,c));
   const chDue=charges.reduce((s,c)=>s+chargeAmt(apt,c),0);
   const chPaid=charges.reduce((s,c)=>s+chargePaid(txns,apt.a,c.id),0);
-  const odCredit=Math.max(-od,0);
-  const grandNet=totalPaid26+otherTotal+chPaid+odCredit-totalDue-Math.max(od,0)-chDue;
+  const odCredit=0; // m26 مش بتتحسب هنا
+  const grandNet=totalPaid26+otherTotal+chPaid-totalDue-Math.max(od,0)-chDue;
 
   return`
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
@@ -880,25 +912,28 @@ function buildStmt(apt){
     <span class="bdg bdg-gy">اشتراك شهري: ${L(apt.qt_e+apt.qt_a)} ج</span>
   </div>
 
-  ${odRows.length||apt.od.m26<0?`
+  ${odRows.length?`
   <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">المستحقات السابقة</div>
-  ${odRows.length?`<div class="tw" style="margin-bottom:12px"><table>
+  <div class="tw" style="margin-bottom:12px"><table>
     <thead><tr><th>البند</th><th>المبلغ</th></tr></thead>
     <tbody>
-      ${odRows.map(r=>`<tr><td>${r.l}</td><td class="${r.v>0?'c-rd':'c-gr'}">${r.v>0?L(r.v)+' ج':'رصيد دائن +'+L(Math.abs(r.v))+' ج'}</td></tr>`).join('')}
-      <tr style="background:var(--bg3)"><td style="font-weight:600">الإجمالي</td><td class="${od>0?'c-rd':'c-gr'}" style="font-weight:700">${od>0?L(od)+' ج':od<0?'رصيد دائن +'+L(Math.abs(od))+' ج':'صفر'}</td></tr>
+      ${odRows.map(r=>`<tr><td>${r.l}</td><td class="c-rd">${L(r.v)} ج</td></tr>`).join('')}
+      <tr style="background:var(--bg3)"><td style="font-weight:600">الإجمالي</td><td class="c-rd" style="font-weight:700">${L(od)} ج</td></tr>
     </tbody>
-  </table></div>`:''}
-  ${apt.od.m26<0?`<div class="notice ok" style="margin-bottom:12px">رصيد دائن من فترة سابقة: <strong>+${L(Math.abs(apt.od.m26))} ج</strong></div>`:''}`:
+  </table></div>`:
   `<div class="notice ok" style="margin-bottom:14px">✓ لا توجد مستحقات سابقة</div>`}
 
   <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">مستحقات 2026 — شهر بشهر</div>
   <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px">${monthHtml}</div>
-  <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;margin-bottom:16px">
+  <div style="background:var(--bg3);border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:${advanceCredit>0?'8':'16'}px">
     <span class="c-tx2">مدفوع: <strong class="c-gr">${L(totalPaid26)} ج</strong></span>
     <span class="c-tx2">مطلوب (${MONTHS_DUE} أشهر): <strong>${L(totalDue)} ج</strong></span>
     <strong class="${totalPaid26>=totalDue?'c-gr':'c-rd'}">${totalPaid26>=totalDue?'✓ ملتزم':'متبقي: '+L(totalDue-totalPaid26)+' ج'}</strong>
   </div>
+  ${advanceCredit>0?`<div class="notice ok" style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+    <span>💰 رصيد دائن مقدّم (شهور لسه مجاءتش)</span>
+    <strong>+${L(advanceCredit)} ج${extraPaidEmara>0&&extraPaidAsansir>0?' ('+L(extraPaidEmara)+' عمارة + '+L(extraPaidAsansir)+' أسانسير)':extraPaidEmara>0?' (عمارة)':' (أسانسير)'}</strong>
+  </div>`:''}
 
   ${charges.length?`
   <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">بنود جماعية</div>
@@ -921,7 +956,7 @@ function buildStmt(apt){
   <div style="background:${grandNet>=0?'var(--gr-bg)':'var(--rd-bg)'};border:1.5px solid ${grandNet>=0?'var(--gr-bd)':'var(--rd-bd)'};border-radius:var(--r);padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
     <div>
       <div style="font-weight:600;font-size:14px">إجمالي الوضع</div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:3px">مستحقات سابقة: ${L(Math.max(od,0))} ج | مستحقات 2026: ${L(Math.max(totalDue-totalPaid26,0))} ج${chDue?' | بنود إضافية: '+L(Math.max(chDue-chPaid,0))+' ج':''}${apt.od.m26<0?' | رصيد دائن سابق: +'+L(Math.abs(apt.od.m26))+' ج':''}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:3px">مستحقات سابقة: ${L(Math.max(od,0))} ج | مستحقات ${CURRENT_YEAR}: ${L(Math.max(totalDue-totalPaid26,0))} ج${chDue?' | بنود إضافية: '+L(Math.max(chDue-chPaid,0))+' ج':''}${advanceCredit?' | رصيد دائن مقدّم: +'+L(advanceCredit)+' ج':''}</div>
     </div>
     <div style="font-size:22px;font-weight:700;color:${grandNet>=0?'var(--gr)':'var(--rd)'}">${grandNet>=0?'رصيد دائن +':'إجمالي المستحقات: '}${L(Math.abs(grandNet))} ج</div>
   </div>`;
@@ -932,29 +967,31 @@ function buildStmt(apt){
 // ════════════════════════════
 function renderOverview(){
   const txns=load();
-  const ebal=fundBal(txns,'emara'),abal=fundBal(txns,'asansir');
-  const totalIn=txns.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const cy=String(CURRENT_YEAR);
+  const txnsCY=txns.filter(t=>t.date&&t.date.startsWith(cy)); // current year only
+  const ebal=fundBal(txns,'emara'),abal=fundBal(txns,'asansir'); // fund balance = all time
+  const totalIn=txnsCY.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
   const settled=APTS.filter(a=>aptNet(a,txns).net>=0).length;
   document.getElementById('ov-kpis').innerHTML=`
     <div class="kc"><div class="kl">صندوق العمارة</div><div class="kv c-gr">${L(ebal)} ج</div><div class="ks">رصيد متاح</div></div>
     <div class="kc"><div class="kl">صندوق الأسانسير</div><div class="kv c-tl">${L(abal)} ج</div><div class="ks">رصيد متاح</div></div>
-    <div class="kc"><div class="kl">إجمالي محصّل</div><div class="kv c-ac">${L(totalIn)} ج</div><div class="ks">${txns.filter(t=>t.type==='income').length} عملية</div></div>
+    <div class="kc"><div class="kl">محصّل ${cy}</div><div class="kv c-ac">${L(totalIn)} ج</div><div class="ks">${txnsCY.filter(t=>t.type==='income').length} عملية</div></div>
     <div class="kc"><div class="kl">شقق ملتزمة</div><div class="kv c-am">${settled}<span style="font-size:14px;color:var(--tx3)"> / ${APTS.length}</span></div><div class="ks">كل المستحقات</div></div>`;
   document.getElementById('ov-funds').innerHTML=`
     <div class="fc2"><div class="fn">صندوق العمارة</div><div class="fa ${ebal>=0?'c-gr':'c-rd'}">${L(ebal)} ج</div>
-      <div class="fd">إيرادات: ${L(txns.filter(t=>t.type==='income'&&t.fund==='emara').reduce((s,t)=>s+t.amount,0))} ج | مصروفات: ${L(txns.filter(t=>t.type==='expense'&&t.fund==='emara').reduce((s,t)=>s+t.amount,0))} ج</div>
+      <div class="fd">إيرادات ${cy}: ${L(txnsCY.filter(t=>t.type==='income'&&t.fund==='emara').reduce((s,t)=>s+t.amount,0))} ج | مصروفات: ${L(txns.filter(t=>t.type==='expense'&&t.fund==='emara').reduce((s,t)=>s+t.amount,0))} ج</div>
       <div class="prog"><div class="pf" style="width:${Math.min(100,Math.round(ebal/20000*100))}%;background:var(--gr)"></div></div></div>
     <div class="fc2"><div class="fn">صندوق الأسانسير</div><div class="fa ${abal>=0?'c-tl':'c-rd'}">${L(abal)} ج</div>
-      <div class="fd">إيرادات: ${L(txns.filter(t=>t.type==='income'&&t.fund==='asansir').reduce((s,t)=>s+t.amount,0))} ج | تحويلات: ${L(txns.filter(t=>t.type==='transfer'&&t.fund==='asansir').reduce((s,t)=>s+t.amount,0))} ج</div>
+      <div class="fd">إيرادات ${cy}: ${L(txnsCY.filter(t=>t.type==='income'&&t.fund==='asansir').reduce((s,t)=>s+t.amount,0))} ج | تحويلات: ${L(txns.filter(t=>t.type==='transfer'&&t.fund==='asansir').reduce((s,t)=>s+t.amount,0))} ج</div>
       <div class="prog"><div class="pf" style="width:${Math.min(100,Math.max(0,Math.round(abal/10000*100)))}%;background:var(--tl)"></div></div></div>`;
   // Stats
   const mqC=APTS.filter(a=>a.s==='مقيم').length,gmC=APTS.filter(a=>a.s==='غير مقيم').length;
   const activeMonths=MONTHS.slice(0,MONTHS_DUE);
-  const ePaidAll=APTS.filter(a=>activeMonths.every(m=>aptPaidM(txns,a.a,'q_emara',m)>=a.qt_e)).length;
-  const ePartial=APTS.filter(a=>activeMonths.some(m=>aptPaidM(txns,a.a,'q_emara',m)>=a.qt_e)&&!activeMonths.every(m=>aptPaidM(txns,a.a,'q_emara',m)>=a.qt_e)).length;
-  const asApts=APTS.filter(a=>a.qt_a>0);
-  const aPaidAll=asApts.filter(a=>activeMonths.every(m=>aptPaidM(txns,a.a,'q_asansir',m)>=a.qt_a)).length;
-  const aPartial=asApts.filter(a=>activeMonths.some(m=>aptPaidM(txns,a.a,'q_asansir',m)>=a.qt_a)&&!activeMonths.every(m=>aptPaidM(txns,a.a,'q_asansir',m)>=a.qt_a)).length;
+  const ePaidAll=APTS.filter(a=>activeMonths.every((m,mi)=>aptPaidM(txns,a.a,'q_emara',m)>=getAptRateForMonth(a,mi).qt_e)).length;
+  const ePartial=APTS.filter(a=>activeMonths.some((m,mi)=>aptPaidM(txns,a.a,'q_emara',m)>=getAptRateForMonth(a,mi).qt_e)&&!activeMonths.every((m,mi)=>aptPaidM(txns,a.a,'q_emara',m)>=getAptRateForMonth(a,mi).qt_e)).length;
+  const asApts=APTS.filter(a=>activeMonths.some((_,mi)=>getAptRateForMonth(a,mi).qt_a>0));
+  const aPaidAll=asApts.filter(a=>activeMonths.every((m,mi)=>getAptRateForMonth(a,mi).qt_a===0||aptPaidM(txns,a.a,'q_asansir',m)>=getAptRateForMonth(a,mi).qt_a)).length;
+  const aPartial=asApts.filter(a=>activeMonths.some((m,mi)=>aptPaidM(txns,a.a,'q_asansir',m)>=getAptRateForMonth(a,mi).qt_a)&&!aPaidAll).length;
   const sawaidOwed=APTS.filter(a=>a.od.sawaid>0);
   const sawaidPaid=[...new Set(txns.filter(t=>t.cat==='sawaid'&&t.apt).map(t=>t.apt))];
   const expByCat={};txns.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.cat||'أخرى']=(expByCat[t.cat||'أخرى']||0)+t.amount;});
@@ -1243,11 +1280,20 @@ function confirmUpload(){
   renderAptGrid();
 }
 function exportExcel(mode){
-  const txns=load();let data=[],sheetName='';
-  const h=['التاريخ','الشقة','اسم المالك','البيان','الصندوق','النوع','الفئة','الربع','المبلغ'];
-  if(mode==='income'){data=txns.filter(t=>t.type==='income').map(t=>[t.date,t.apt||'',t.aptN||'',t.desc,t.fund==='emara'?'العمارة':'الأسانسير','إيراد',CAT_LABELS[t.cat]||t.cat||'',t.quarter||'',t.amount]);sheetName='الإيرادات';}
-  else if(mode==='expense'){data=txns.filter(t=>t.type!=='income').map(t=>[t.date,'','',t.desc,t.fund==='emara'?'العمارة':'الأسانسير',t.type==='expense'?'مصروف':'تحويل',t.cat||'','',t.amount]);sheetName='المصروفات';}
-  else{data=txns.map(t=>[t.date,t.apt||'',t.aptN||'',t.desc,t.fund==='emara'?'العمارة':'الأسانسير',t.type==='income'?'إيراد':t.type==='expense'?'مصروف':'تحويل',t.cat||'',t.quarter||'',t.amount]);sheetName='دفتر الحسابات';}
+  const txns=load();
+  const cy=String(CURRENT_YEAR);
+  let data=[],sheetName='';
+  const h=['التاريخ','الشقة','اسم المالك','البيان','الصندوق','النوع','الفئة','الشهر','المبلغ'];
+  if(mode==='income'){
+    data=txns.filter(t=>t.type==='income'&&t.date?.startsWith(cy)).map(t=>[t.date,t.apt||'',t.aptN||'',t.desc,t.fund==='emara'?'العمارة':'الأسانسير','إيراد',CAT_LABELS[t.cat]||t.cat||'',t.quarter||'',t.amount]);
+    sheetName='الإيرادات '+cy;
+  } else if(mode==='expense'){
+    data=txns.filter(t=>t.type!=='income').map(t=>[t.date,'','',t.desc,t.fund==='emara'?'العمارة':'الأسانسير',t.type==='expense'?'مصروف':'تحويل',t.cat||'','',t.amount]);
+    sheetName='المصروفات';
+  } else {
+    data=txns.map(t=>[t.date,t.apt||'',t.aptN||'',t.desc,t.fund==='emara'?'العمارة':'الأسانسير',t.type==='income'?'إيراد':t.type==='expense'?'مصروف':'تحويل',t.cat||'',t.quarter||'',t.amount]);
+    sheetName='دفتر الحسابات';
+  }
   const ws=XLSX.utils.aoa_to_sheet([h,...data]);
   ws['!cols']=[{wch:12},{wch:6},{wch:20},{wch:28},{wch:10},{wch:8},{wch:14},{wch:6},{wch:10}];
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,sheetName);
@@ -1371,8 +1417,19 @@ function renderAptData(){
     </td>
     <td><input class="fc" type="number" value="${a.qt_e}" style="width:80px;padding:5px 8px;font-size:12px" onchange="updateApt('${a.a}','qt_e',+this.value)"></td>
     <td><input class="fc" type="number" value="${a.qt_a}" style="width:80px;padding:5px 8px;font-size:12px" onchange="updateApt('${a.a}','qt_a',+this.value)"></td>
+    <td>
+      <button class="btn btn-sm btn-gy" onclick="openHistory('${a.a}')" title="سجل تغييرات الحالة">
+        📋${a.statusHistory?.length?` (${a.statusHistory.length})`:''}
+      </button>
+    </td>
     <td><button class="btn btn-sm btn-rd" data-apt="${a.a}" onclick="deleteApt(this.dataset.apt)">حذف</button></td>
-  </tr>`).join('')||'<tr><td colspan="7" class="empty">لا توجد شقق</td></tr>';
+  </tr>
+  ${document.getElementById('hist-'+a.a)?'':''}`).join('')||'<tr><td colspan="8" class="empty">لا توجد شقق</td></tr>';
+  // Render any open history panels
+  apts.forEach(a=>{
+    const hp=document.getElementById('hist-'+a.a);
+    if(hp) renderHistoryPanel(a.a);
+  });
 }
 function updateApt(aptNum,field,val){
   const idx=APTS.findIndex(a=>a.a===aptNum);
@@ -1405,8 +1462,88 @@ function addNewApt(){
 }
 
 // ════════════════════════════
-// GOOGLE SHEETS
+// STATUS HISTORY
 // ════════════════════════════
+function openHistory(aptNum){
+  const tbl=document.getElementById('apt-data-tbl');
+  const row=document.getElementById('row-'+aptNum);
+  if(!row)return;
+  // Toggle — if panel already open close it
+  const existing=document.getElementById('hist-'+aptNum);
+  if(existing){existing.remove();return;}
+  // Insert panel row after the apt row
+  const apt=APTS.find(a=>a.a===aptNum);
+  const tr=document.createElement('tr');
+  tr.id='hist-'+aptNum;
+  tr.innerHTML=`<td colspan="8" style="background:var(--bg3);padding:14px 16px;border-bottom:2px solid var(--bd2)">
+    <div style="font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:10px">📋 سجل تحولات شقة ${aptNum} — ${apt.n}</div>
+    <div id="hist-list-${aptNum}"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:flex-end">
+      <div><div style="font-size:11px;color:var(--tx3);margin-bottom:3px">من شهر</div>
+        <input class="fc" type="month" id="hn-from-${aptNum}" style="font-size:12px;padding:5px 8px"></div>
+      <div><div style="font-size:11px;color:var(--tx3);margin-bottom:3px">الحالة الجديدة</div>
+        <select class="fc" id="hn-s-${aptNum}" style="font-size:12px;padding:5px 8px">
+          <option value="مقيم">مقيم</option><option value="غير مقيم">غير مقيم</option>
+        </select></div>
+      <div><div style="font-size:11px;color:var(--tx3);margin-bottom:3px">عمارة/شهر ج</div>
+        <input class="fc" type="number" id="hn-qe-${aptNum}" style="width:90px;font-size:12px;padding:5px 8px" placeholder="100"></div>
+      <div><div style="font-size:11px;color:var(--tx3);margin-bottom:3px">أسانسير/شهر ج</div>
+        <input class="fc" type="number" id="hn-qa-${aptNum}" style="width:90px;font-size:12px;padding:5px 8px" placeholder="0"></div>
+      <button class="btn btn-gr btn-sm" onclick="addHistoryEntry('${aptNum}')">+ إضافة تحول</button>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:8px">💡 التحول يعني: ابتداءً من هذا الشهر، الشقة تغيرت حالتها. الحالة الحالية في الجدول فوق تمثل آخر حالة.</div>
+  </td>`;
+  row.insertAdjacentElement('afterend',tr);
+  renderHistoryPanel(aptNum);
+}
+
+function renderHistoryPanel(aptNum){
+  const apt=APTS.find(a=>a.a===aptNum);
+  const el=document.getElementById('hist-list-'+aptNum);
+  if(!el||!apt)return;
+  const hist=[...(apt.statusHistory||[])].sort((a,b)=>b.from.localeCompare(a.from));
+  if(!hist.length){el.innerHTML='<div style="font-size:12px;color:var(--tx3);margin-bottom:6px">لا توجد تحولات مسجلة — الحالة الحالية مطبقة من بداية السنة</div>';return;}
+  const MONTH_AR=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">`+
+    hist.map(h=>{
+      const [yr,mo]=h.from.split('-');
+      const mName=MONTH_AR[parseInt(mo)-1]||mo;
+      return`<div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:8px 12px;font-size:12px">
+        <span style="color:var(--tx3);min-width:80px">من ${mName} ${yr}</span>
+        <span class="bdg ${h.s==='مقيم'?'bdg-gr':'bdg-gy'}">${h.s}</span>
+        <span style="color:var(--tx2)">عمارة: ${h.qt_e} ج | أسانسير: ${h.qt_a} ج</span>
+        <button class="btn btn-sm btn-rd" style="margin-right:auto" data-apt="${aptNum}" data-from="${h.from}" onclick="removeHistoryEntry(this.dataset.apt,this.dataset.from)">حذف</button>
+      </div>`;
+    }).join('')+`</div>`;
+}
+
+function addHistoryEntry(aptNum){
+  const from=document.getElementById('hn-from-'+aptNum).value;
+  const s=document.getElementById('hn-s-'+aptNum).value;
+  const qt_e=parseFloat(document.getElementById('hn-qe-'+aptNum).value)||0;
+  const qt_a=parseFloat(document.getElementById('hn-qa-'+aptNum).value)||0;
+  if(!from){alert('اختر الشهر أولاً');return;}
+  const idx=APTS.findIndex(a=>a.a===aptNum);
+  if(idx<0)return;
+  if(!APTS[idx].statusHistory) APTS[idx].statusHistory=[];
+  // Remove any existing entry for same month
+  APTS[idx].statusHistory=APTS[idx].statusHistory.filter(h=>h.from!==from);
+  APTS[idx].statusHistory.push({from,s,qt_e,qt_a});
+  saveAptsCustom(APTS);
+  renderHistoryPanel(aptNum);
+  renderAptGrid();
+}
+
+function removeHistoryEntry(aptNum,from){
+  const idx=APTS.findIndex(a=>a.a===aptNum);
+  if(idx<0)return;
+  APTS[idx].statusHistory=(APTS[idx].statusHistory||[]).filter(h=>h.from!==from);
+  saveAptsCustom(APTS);
+  renderHistoryPanel(aptNum);
+  renderAptGrid();
+}
+
+
 const KGS='bms5_gs_url';
 const GS_CODE=`// صندوق العمارة — Google Apps Script
 const SH='BMS_Data';
