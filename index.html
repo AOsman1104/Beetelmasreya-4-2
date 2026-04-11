@@ -234,13 +234,42 @@ select.fc option{background:var(--bg2)}
           <option value="other">أخرى</option>
         </select>
       </div>
-      <div class="fg" id="in-q-wrap"><label>الشهر</label>
-        <select class="fc" id="in-quarter">
-          <option value="يناير">يناير</option><option value="فبراير">فبراير</option><option value="مارس">مارس</option>
-          <option value="أبريل">أبريل</option><option value="مايو">مايو</option><option value="يونيو">يونيو</option>
-          <option value="يوليو">يوليو</option><option value="أغسطس">أغسطس</option><option value="سبتمبر">سبتمبر</option>
-          <option value="أكتوبر">أكتوبر</option><option value="نوفمبر">نوفمبر</option><option value="ديسمبر">ديسمبر</option>
+      <div class="fg"><label>نوع الإيراد</label>
+        <select class="fc" id="in-cat" onchange="updateInFund()">
+          <option value="q_emara">عمارة</option>
+          <option value="q_asansir">أسانسير</option>
+          <option value="q_both">عمارة + أسانسير معاً</option>
+          <option value="sawaid">صواعد</option>
+          <option value="old_payment">سداد دين قديم</option>
+          <option value="water_meter">عداد مياه</option>
+          <option value="return">مرتد / عائد</option>
+          <option value="other">أخرى</option>
         </select>
+      </div>
+      <div class="fg" id="in-q-wrap">
+        <label>طريقة الدفع</label>
+        <select class="fc" id="in-period" onchange="updateInPeriod()" style="margin-bottom:6px">
+          <option value="monthly">شهري — اختر شهر</option>
+          <option value="quarterly">ربع سنوي — اختر ربع</option>
+        </select>
+        <!-- Monthly picker -->
+        <div id="in-month-wrap">
+          <select class="fc" id="in-quarter">
+            <option value="يناير">يناير</option><option value="فبراير">فبراير</option><option value="مارس">مارس</option>
+            <option value="أبريل">أبريل</option><option value="مايو">مايو</option><option value="يونيو">يونيو</option>
+            <option value="يوليو">يوليو</option><option value="أغسطس">أغسطس</option><option value="سبتمبر">سبتمبر</option>
+            <option value="أكتوبر">أكتوبر</option><option value="نوفمبر">نوفمبر</option><option value="ديسمبر">ديسمبر</option>
+          </select>
+        </div>
+        <!-- Quarterly picker -->
+        <div id="in-qtr-wrap" style="display:none">
+          <select class="fc" id="in-qtr-sel">
+            <option value="Q1">Q1 — يناير / فبراير / مارس</option>
+            <option value="Q2">Q2 — أبريل / مايو / يونيو</option>
+            <option value="Q3">Q3 — يوليو / أغسطس / سبتمبر</option>
+            <option value="Q4">Q4 — أكتوبر / نوفمبر / ديسمبر</option>
+          </select>
+        </div>
       </div>
       <div class="fg" id="in-fund-wrap"><label>الصندوق</label>
         <select class="fc" id="in-fund"><option value="emara">العمارة</option><option value="asansir">الأسانسير</option></select>
@@ -1034,29 +1063,106 @@ function renderOverview(){
 // ════════════════════════════
 // INCOME
 // ════════════════════════════
+const Q_MONTHS={
+  'Q1':['يناير','فبراير','مارس'],
+  'Q2':['أبريل','مايو','يونيو'],
+  'Q3':['يوليو','أغسطس','سبتمبر'],
+  'Q4':['أكتوبر','نوفمبر','ديسمبر']
+};
+const Q_DATES={
+  'Q1':['2026-01-31','2026-02-28','2026-03-31'],
+  'Q2':['2026-04-30','2026-05-31','2026-06-30'],
+  'Q3':['2026-07-31','2026-08-31','2026-09-30'],
+  'Q4':['2026-10-31','2026-11-30','2026-12-31']
+};
+function getQDates(q){
+  const yr=String(CURRENT_YEAR);
+  const m={Q1:[[1,31],[2,28],[3,31]],Q2:[[4,30],[5,31],[6,30]],Q3:[[7,31],[8,31],[9,30]],Q4:[[10,31],[11,30],[12,31]]};
+  return (m[q]||[]).map(([mo,d])=>`${yr}-${String(mo).padStart(2,'0')}-${d}`);
+}
 function updateInFund(){
   const c=document.getElementById('in-cat').value;
-  document.getElementById('in-q-wrap').style.display=['q_emara','q_asansir','q_both'].includes(c)?'':'none';
+  const isPayment=['q_emara','q_asansir','q_both'].includes(c);
+  document.getElementById('in-q-wrap').style.display=isPayment?'':'none';
   document.getElementById('in-fund-wrap').style.display=c==='q_both'?'none':'';
   if(c==='q_emara')document.getElementById('in-fund').value='emara';
   if(c==='q_asansir')document.getElementById('in-fund').value='asansir';
+  updateInPeriod();
+  // Auto-fill amount if apt selected
+  autoFillAmount();
+}
+function updateInPeriod(){
+  const p=document.getElementById('in-period')?.value;
+  const mw=document.getElementById('in-month-wrap');
+  const qw=document.getElementById('in-qtr-wrap');
+  if(mw) mw.style.display=p==='quarterly'?'none':'';
+  if(qw) qw.style.display=p==='quarterly'?'':'none';
+  autoFillAmount();
+}
+function autoFillAmount(){
+  const aptSel=document.getElementById('in-apt').value;
+  const cat=document.getElementById('in-cat').value;
+  const period=document.getElementById('in-period')?.value||'monthly';
+  const apt=APTS.find(a=>a.a===aptSel);
+  if(!apt||!['q_emara','q_asansir','q_both'].includes(cat))return;
+  const mi=MONTHS.indexOf(document.getElementById('in-quarter')?.value||'يناير');
+  const rate=getAptRateForMonth(apt,mi>=0?mi:0);
+  const mult=period==='quarterly'?3:1;
+  let amt=0;
+  if(cat==='q_emara') amt=rate.qt_e*mult;
+  else if(cat==='q_asansir') amt=rate.qt_a*mult;
+  else if(cat==='q_both') amt=(rate.qt_e+rate.qt_a)*mult;
+  if(amt>0) document.getElementById('in-amount').value=amt;
 }
 function addIncome(){
   const date=document.getElementById('in-date').value,aptSel=document.getElementById('in-apt').value;
-  const cat=document.getElementById('in-cat').value,quarter=document.getElementById('in-quarter').value;
+  const cat=document.getElementById('in-cat').value;
+  const period=document.getElementById('in-period')?.value||'monthly';
   const fund=document.getElementById('in-fund').value,desc=document.getElementById('in-desc').value.trim();
   const amount=parseFloat(document.getElementById('in-amount').value);
   if(!date||!desc||!amount||amount<=0){setMsg('in-msg','⚠ أكمل جميع الحقول','var(--rd)');return;}
   const apt=APTS.find(a=>a.a===aptSel);
-  const base={date,type:'income',apt:aptSel,aptN:apt?apt.n:'',desc,cat,quarter:['q_emara','q_asansir','q_both'].includes(cat)?quarter:''};
   const arr=load();
-  if(cat==='q_both'){
-    const hE=apt?apt.qt_e:amount/2,hA=apt?apt.qt_a:amount/2;
-    arr.push({...base,id:'u'+Date.now()+'e',fund:'emara',cat:'q_emara',amount:hE,desc:desc+' (عمارة)'});
-    arr.push({...base,id:'u'+Date.now()+'a',fund:'asansir',cat:'q_asansir',amount:hA,desc:desc+' (أسانسير)'});
-    setMsg('in-msg',`✓ عمارة ${L(hE)} ج + أسانسير ${L(hA)} ج`,'var(--gr)');
-  }else{
-    arr.push({...base,id:'u'+Date.now(),fund,amount});
+  const isPayment=['q_emara','q_asansir','q_both'].includes(cat);
+
+  if(isPayment && period==='quarterly'){
+    // Split into 3 monthly transactions
+    const qSel=document.getElementById('in-qtr-sel').value;
+    const months=Q_MONTHS[qSel]||[];
+    const dates=getQDates(qSel);
+    const perMonth=amount/3;
+    let totalAdded=0;
+    months.forEach((m,i)=>{
+      const mi=MONTHS.indexOf(m);
+      const rate=getAptRateForMonth(apt||{qt_e:0,qt_a:0,s:''},mi>=0?mi:0);
+      if(cat==='q_both'){
+        arr.push({id:'u'+Date.now()+i+'e',date:dates[i]||date,type:'income',fund:'emara',apt:aptSel,aptN:apt?apt.n:'',desc:desc+' — '+m+' (عمارة)',cat:'q_emara',quarter:m,amount:apt?rate.qt_e:Math.round(perMonth/2)});
+        arr.push({id:'u'+Date.now()+i+'a',date:dates[i]||date,type:'income',fund:'asansir',apt:aptSel,aptN:apt?apt.n:'',desc:desc+' — '+m+' (أسانسير)',cat:'q_asansir',quarter:m,amount:apt?rate.qt_a:Math.round(perMonth/2)});
+        totalAdded+=apt?(rate.qt_e+rate.qt_a):perMonth;
+      } else {
+        const mAmt=apt?(cat==='q_emara'?rate.qt_e:rate.qt_a):Math.round(perMonth);
+        arr.push({id:'u'+Date.now()+i,date:dates[i]||date,type:'income',fund,apt:aptSel,aptN:apt?apt.n:'',desc:desc+' — '+m,cat,quarter:m,amount:mAmt});
+        totalAdded+=mAmt;
+      }
+    });
+    setMsg('in-msg',`✓ تم تسجيل ${months.join(' + ')} — إجمالي ${L(totalAdded)} ج`,'var(--gr)');
+  } else if(isPayment){
+    // Single month
+    const month=document.getElementById('in-quarter').value;
+    const base={date,type:'income',apt:aptSel,aptN:apt?apt.n:'',desc,cat,quarter:month};
+    if(cat==='q_both'){
+      const mi=MONTHS.indexOf(month);
+      const rate=getAptRateForMonth(apt||{qt_e:0,qt_a:0,s:''},mi>=0?mi:0);
+      const hE=apt?rate.qt_e:Math.round(amount/2),hA=apt?rate.qt_a:Math.round(amount/2);
+      arr.push({...base,id:'u'+Date.now()+'e',fund:'emara',cat:'q_emara',amount:hE,desc:desc+' (عمارة)'});
+      arr.push({...base,id:'u'+Date.now()+'a',fund:'asansir',cat:'q_asansir',amount:hA,desc:desc+' (أسانسير)'});
+      setMsg('in-msg',`✓ ${month}: عمارة ${L(hE)} ج + أسانسير ${L(hA)} ج`,'var(--gr)');
+    } else {
+      arr.push({...base,id:'u'+Date.now(),fund,amount});
+      setMsg('in-msg',`✓ ${month}: ${L(amount)} ج`,'var(--gr)');
+    }
+  } else {
+    arr.push({id:'u'+Date.now(),date,type:'income',apt:aptSel,aptN:apt?apt.n:'',desc,cat,quarter:'',fund,amount});
     setMsg('in-msg','✓ تم التسجيل — '+L(amount)+' ج','var(--gr)');
   }
   save(arr);document.getElementById('in-desc').value='';document.getElementById('in-amount').value='';
